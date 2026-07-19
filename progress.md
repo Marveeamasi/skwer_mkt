@@ -123,11 +123,11 @@ The application is a working, buildable Next.js product with a verified hosted S
 
 - Checkout does not yet snapshot/apply delivery fees from a seller-controlled fulfilment configuration.
 - Deposit initialization is server-correct, but the checkout review UI cannot display the due-now deposit until the public campaign RPC exposes `deposit_value` (planned in the next hosted migration update).
-- Seller balance-link generation, seven-day hashed links, buyer balance page, current-outstanding recalculation and Paystack initialization are implemented. Migration 7 must be applied before this flow can run because it adds the payment-link relationship, duplicate-open-payment guard, completion trigger and checkout compensation function.
+- Seller balance-link generation, seven-day hashed links, buyer balance page, current-outstanding recalculation and Paystack initialization are implemented on applied migration 7, including duplicate-open-payment protection and verified-payment link completion.
 - Browser callback now preserves the opaque order bearer token in tab-scoped session storage across the Paystack redirect and uses it for the verified order link; this still needs a real Paystack test-mode E2E verification.
 - Webhook returns quickly and records errors, but no retryable internal job mechanism exists.
 - Checkout abandonment/expired reservation scheduling is not wired to a cron job.
-- Seller campaign list, order list and order detail now query seller-isolated hosted data. Campaign status and allowed order status transitions persist through authenticated/audited endpoints and immutable order events. Refund/message/balance actions remain.
+- Seller campaign list, order list and order detail query seller-isolated hosted data. Campaign/order status changes and balance-link creation persist through authenticated/audited endpoints and immutable order events. Refund request and admin submission UI/API are implemented but require migration 8 before use; private notes and buyer-message editing remain.
 - Seller order CSV export is implemented with private/no-store response headers and escaped cells.
 - Paystack configured key has not been used for a real test-mode transaction in this verification session.
 - ngrok configuration, ignored credential, launch script and webhook guide are implemented. After explicit user approval, an HTTPS tunnel was opened and verified on 2026-07-19; `.env.local` uses its temporary public base URL for test callbacks. The URL is ephemeral and must be replaced for production.
@@ -165,8 +165,8 @@ The application is a working, buildable Next.js product with a verified hosted S
 
 ### PARTIAL
 
-- Campaign and order list/detail screens now use authenticated hosted queries; dashboard, customer aggregates and reports still use fictional display data.
-- Order status updates persist with transition validation, audit entries and immutable public events. Filters/search UI, private notes, buyer messages, refund requests and balance links remain.
+- Campaign, order, dashboard, customer and report screens now use authenticated seller-isolated hosted queries. Fictional seller metrics were removed; report profit is explicitly conservative and based only on entered purchase costs.
+- Order status updates persist with transition validation, audit entries and immutable public events. Secure balance links are connected. Seller refund request, admin approval, Paystack submission and refund webhook lifecycle are implemented in application code; migration 8 is **NOT APPLIED**. Filters/search behavior, private notes and buyer-message editing remain.
 - Deterministic follow-up reminders and copyable WhatsApp templates are displayed conceptually but not generated from real orders.
 - Restock request form is wired to its rate-limited hosted API and provides a no-charge success state; hosted browser submission still needs integration verification.
 - Restock grouping, contact/convert actions, and notification copy are not connected.
@@ -220,7 +220,7 @@ Cash wallets/withdrawals, loans, escrow claims, BNPL, credit scoring, unverified
 1. Run real Paystack test-mode checkout/webhook/balance completion and stock-reservation compensation coverage.
 2. Finish database-backed rate-limit wiring for checkout, login and bearer-token lookup.
 3. Finish payment onboarding and media record linking; seller onboarding and authenticated campaign creation are already hosted-verified.
-4. Connect seller operations, restock, substitutions, reports and exports.
+4. Apply and verify migration 8; then finish substitutions, restock operations, filters, notes/messages and remaining exports.
 5. Connect audited admin mutations and analytics.
 6. Complete hosted integration tests, reliable Playwright lifecycle, performance/accessibility checks, and deployment documentation.
 
