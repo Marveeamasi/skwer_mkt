@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 330 80" role="img" aria-label="SKWER MKT">
+  <rect x="4" y="4" width="72" height="72" fill="#B9F34A"/>
+  <path d="M23 37h10v25H23a3 3 0 0 1-3-3V40a3 3 0 0 1 3-3Zm15 25h16a7 7 0 0 0 6.8-5.3l4-15.5a7 7 0 0 0-6.8-8.8h-9.3l1.4-8c.6-3.7-1.3-7.3-4.7-8.8l-2.7-1.1L33 31.7V57a8 8 0 0 0 5 5Z" fill="#111827"/>
+  <circle cx="27" cy="55" r="2.4" fill="#FF6B57"/>
+  <text x="92" y="53" fill="#111827" font-family="Plus Jakarta Sans,Arial,sans-serif" font-size="39" font-weight="800" letter-spacing="-1.5">SKWER MKT</text>
+</svg>

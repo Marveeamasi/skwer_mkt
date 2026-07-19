@@ -1,0 +1,1 @@
+export function requestIdentifier(request:Request){const forwarded=request.headers.get("x-forwarded-for")?.split(",")[0]?.trim(),real=request.headers.get("x-real-ip");return forwarded||real||"unknown"}

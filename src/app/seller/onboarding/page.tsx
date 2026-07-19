@@ -1,0 +1,1 @@
+import {OnboardingForm} from "@/components/seller/onboarding-form";export default function Page(){return <><header className="app-topbar"><div><h1>Set up your business</h1><p>Step 1 of 3 · Business details</p></div><span className="badge">33% complete</span></header><OnboardingForm/></>}

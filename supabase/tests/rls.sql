@@ -1,0 +1,12 @@
+begin;
+select plan(8);
+select has_table('public','orders','orders exists');
+select has_table('public','reward_credits','rewards exist');
+select has_function('public','reserve_variant',array['uuid','uuid','integer','timestamp with time zone'],'atomic reservation exists');
+select has_function('public','convert_payment_success',array['text','text','text','timestamp with time zone','jsonb'],'idempotent payment function exists');
+select policies_are('public','orders',array['seller_orders_select'],'orders expose only explicit seller read policy');
+select policies_are('public','payments',array['payments_seller_read'],'seller cannot mutate payment state');
+select policies_are('public','reward_credits',array['rewards_seller_read'],'seller cannot mutate reward state');
+select policies_are('public','payment_webhook_events',array[]::text[],'webhook events remain service-role only');
+select * from finish();
+rollback;

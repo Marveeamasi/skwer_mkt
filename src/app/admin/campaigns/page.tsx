@@ -1,0 +1,1 @@
+import {ResourcePage} from "@/components/admin/resource-page";export default function Page(){return <ResourcePage title="Campaigns" description="Moderate products and preserve the review trail." columns={["Campaign","Seller","Category","Status","Reports"]} rows={[["Soft Glam Set","Amara Beauty","Beauty","Active","0"],["Kids Ankara Set","Dami Styles","Fashion","Paused","1"]]}/>}

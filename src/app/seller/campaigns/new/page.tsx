@@ -1,0 +1,1 @@
+import {CampaignForm} from "@/components/seller/campaign-form";export default function Page(){return <><header className="app-topbar"><div><h1>Create a sales link</h1><p>Four short steps. You can save a draft at any time.</p></div><span className="badge">Step 1 of 4</span></header><CampaignForm/></>}

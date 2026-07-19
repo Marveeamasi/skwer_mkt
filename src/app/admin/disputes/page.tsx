@@ -1,0 +1,1 @@
+import {ResourcePage} from "@/components/admin/resource-page";export default function Page(){return <ResourcePage title="Disputes" description="Track refunds, chargebacks and resolution evidence." columns={["Case","Order","Seller","Type","Status"]} rows={[["DSP-001","SKW-A1","Amara Beauty","Refund","Awaiting seller"]]}/>}
