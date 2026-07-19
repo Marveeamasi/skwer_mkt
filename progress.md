@@ -51,7 +51,7 @@ The application is a working, buildable Next.js product with a verified hosted S
 
 - Rebrandable public name, short name, tagline, URL, support details, and feature gates.
 - Safe `.env.example` and populated ignored `.env.local`.
-- Product positioning, landing page, how-it-works page, and inclusive-pricing explanation.
+- Product positioning, landing page, inclusive-pricing explanation, and a responsive visual how-it-works walkthrough showing seller link creation, buyer selection, verified order tracking and referral qualification.
 - Privacy, platform terms, seller terms, buyer terms, refund/cancellation, prohibited products, referral reward, dispute, and content/photo-consent pages.
 - Every policy page is clearly marked as a draft requiring professional review.
 - Square-background thumbs-up SVG logo system is implemented for navigation, favicon, web manifest and reusable brand assets; all default Vercel/Next placeholder assets were removed.
@@ -81,7 +81,9 @@ The application is a working, buildable Next.js product with a verified hosted S
 ### PARTIAL
 
 - Registration failure was reproduced end to end. The endpoint path/body/secret are correct, but both an OTP message and a minimal control message to the configured support Gmail address were rejected by the standalone server's SMTP provider with `550 Message discarded as high-probability spam`. The application now normalizes the endpoint, returns truthful statuses, removes failed OTPs, atomically claims codes, rate-limits registration and rolls back partial users. Successful registration is externally blocked until the email-server project fixes its SMTP sender/domain configuration; real-inbox retest remains required.
-- Login and registration now have accessible show/hide password controls. Signup keeps the password only in React memory between OTP steps instead of plaintext `sessionStorage`, and includes resend/change-details actions.
+- Login and registration now have accessible show/hide password controls. Signup keeps the password only in React memory instead of plaintext `sessionStorage`. Resend has an independent truthful loading state, recently issued unexpired codes remain valid despite mail delays, and UI wording distinguishes SMTP acceptance from inbox delivery.
+- Public DNS verification found SPF and strict quarantine DMARC for `enthernetservices.com`; direct SMTP mail is spam-foldered/delayed. Server-only EmailJS is now the configured primary provider, with the Vercel Nodemailer service as automatic fallback; EmailJS credentials never enter the browser bundle. Real OTP requests through the local registration route returned 200 for both the support inbox and `amasimarvellous@gmail.com`. Actual inbox receipt and successful account creation still require confirmation.
+- OTP-step DOM reuse was fixed with keyed steps and a controlled numeric code field, preventing the email address from appearing in the verification-code input. Resend has independent loading copy and all recently issued unexpired codes remain usable when delivery is delayed.
 - Seller onboarding business-details UI now persists through an authenticated server endpoint with normalized phone data and an audit record. Payment onboarding and invite-token enforcement remain.
 - Login works through Supabase password auth; forgot-password screen does not yet send/complete recovery through the custom email service.
 - Optional fingerprint/passkey quick login is not implemented.
