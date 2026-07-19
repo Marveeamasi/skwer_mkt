@@ -80,7 +80,7 @@ The application is a working, buildable Next.js product with a verified hosted S
 
 ### PARTIAL
 
-- Registration UI and APIs exist but have not been end-to-end tested against the configured hosted email service.
+- Registration failure was reproduced and traced to `EMAIL_SERVICE_URL` targeting the service root instead of `/api/send`. The client now normalizes either form, uses the verified provider contract, returns truthful validation/rate-limit/delivery/server statuses, deletes OTP records after failed delivery, atomically claims one-time codes, rate-limits account creation, and rolls back an Auth user if profile creation fails. A reserved-address integration test returned the expected 502 and left zero OTP rows; real-inbox delivery and successful browser registration still require retest after deployment.
 - Seller onboarding business-details UI now persists through an authenticated server endpoint with normalized phone data and an audit record. Payment onboarding and invite-token enforcement remain.
 - Login works through Supabase password auth; forgot-password screen does not yet send/complete recovery through the custom email service.
 - Optional fingerprint/passkey quick login is not implemented.
@@ -166,7 +166,7 @@ The application is a working, buildable Next.js product with a verified hosted S
 ### PARTIAL
 
 - Campaign, order, dashboard, customer and report screens now use authenticated seller-isolated hosted queries. Fictional seller metrics were removed; report profit is explicitly conservative and based only on entered purchase costs.
-- Order status updates persist with transition validation, audit entries and immutable public events. Secure balance links are connected. Seller refund request, admin approval, Paystack submission and refund webhook lifecycle are implemented in application code; migration 8 is **NOT APPLIED**. Filters/search behavior, private notes and buyer-message editing remain.
+- Order status updates persist with transition validation, audit entries and immutable public events. Secure balance links are connected. Migration 8 is applied and its atomic completion function is hosted-verified. Seller refund request, admin approval, Paystack submission, partial/full completion, failure recovery and reward reversal are connected; a real Paystack refund remains an external provider-path test. Filters/search behavior, private notes and buyer-message editing remain.
 - Deterministic follow-up reminders and copyable WhatsApp templates are displayed conceptually but not generated from real orders.
 - Restock request form is wired to its rate-limited hosted API and provides a no-charge success state; hosted browser submission still needs integration verification.
 - Restock grouping, contact/convert actions, and notification copy are not connected.
