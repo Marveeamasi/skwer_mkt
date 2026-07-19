@@ -80,7 +80,8 @@ The application is a working, buildable Next.js product with a verified hosted S
 
 ### PARTIAL
 
-- Registration failure was reproduced and traced to `EMAIL_SERVICE_URL` targeting the service root instead of `/api/send`. The client now normalizes either form, uses the verified provider contract, returns truthful validation/rate-limit/delivery/server statuses, deletes OTP records after failed delivery, atomically claims one-time codes, rate-limits account creation, and rolls back an Auth user if profile creation fails. A reserved-address integration test returned the expected 502 and left zero OTP rows; real-inbox delivery and successful browser registration still require retest after deployment.
+- Registration failure was reproduced end to end. The endpoint path/body/secret are correct, but both an OTP message and a minimal control message to the configured support Gmail address were rejected by the standalone server's SMTP provider with `550 Message discarded as high-probability spam`. The application now normalizes the endpoint, returns truthful statuses, removes failed OTPs, atomically claims codes, rate-limits registration and rolls back partial users. Successful registration is externally blocked until the email-server project fixes its SMTP sender/domain configuration; real-inbox retest remains required.
+- Login and registration now have accessible show/hide password controls. Signup keeps the password only in React memory between OTP steps instead of plaintext `sessionStorage`, and includes resend/change-details actions.
 - Seller onboarding business-details UI now persists through an authenticated server endpoint with normalized phone data and an audit record. Payment onboarding and invite-token enforcement remain.
 - Login works through Supabase password auth; forgot-password screen does not yet send/complete recovery through the custom email service.
 - Optional fingerprint/passkey quick login is not implemented.
