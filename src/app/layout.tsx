@@ -3,6 +3,7 @@ import "./globals.css";
 import "./app.css";
 import "./flows.css";
 import "./theme.css";
+import "./gesture.css";
 import { publicConfig } from "@/lib/config";
 import {GestureTheme} from "@/components/theme/gesture-theme";
 

@@ -16,7 +16,7 @@ The application is a working, buildable Next.js product with a verified hosted S
 ### Verified totals
 
 - Hosted database: 4 sellers, 8 campaigns, 4 orders, 1 available reward, 1 restock request, 1 substitution offer, 1 active fee configuration.
-- Unit tests: 35 passing across pricing, security, tokens, order transitions, money/deposit boundaries, phone validation, signed-value tampering, referrals, rewards, and attribution.
+- Unit tests: 38 passing across pricing, security, tokens, order transitions, money/deposit boundaries, phone validation, signed-value tampering, referrals, rewards, attribution, and mobile theme-gesture classification.
 - Production build: passing after the latest hosted-environment changes; 32 routes/pages were generated, including the SVG icon and web manifest.
 - TypeScript strict check: passing.
 - ESLint: passing.
@@ -55,7 +55,7 @@ The application is a working, buildable Next.js product with a verified hosted S
 - Privacy, platform terms, seller terms, buyer terms, refund/cancellation, prohibited products, referral reward, dispute, and content/photo-consent pages.
 - Every policy page is clearly marked as a draft requiring professional review.
 - Square-background thumbs-up SVG logo system is implemented for navigation, favicon, web manifest and reusable brand assets; all default Vercel/Next placeholder assets were removed.
-- Theme defaults to the browser colour preference, remembers a deliberate user override, and toggles only after a thresholded horizontal pointer release. It does not cancel pointer/touch defaults, excludes interactive/horizontal-scroll elements, announces the result accessibly, and respects reduced motion.
+- Theme defaults to the browser colour preference, remembers a deliberate user override, and toggles only after a thresholded horizontal pointer release. Mobile pointer cancellation was corrected with `touch-action: pan-y pinch-zoom`, a calibrated touch threshold, protected native horizontal-scroll zones and safe storage handling. It does not cancel vertical scrolling, excludes interactive controls, announces the result accessibly, and respects reduced motion. Device retest awaits deployment of the latest commit.
 
 ### EXTERNAL GATE
 
@@ -150,7 +150,7 @@ The application is a working, buildable Next.js product with a verified hosted S
 - Delivered/picked-up status now qualifies paid referral attribution, creates a 60-day token-scoped available reward idempotently, and attempts the configured transactional email notification.
 - Reward code generation, checkout application, atomic redemption, expiry job, refund reversal, and redeemed-reward review workflow are not implemented end to end.
 - Migration 6 is applied and hosted-verified: its balance/refund/review ledgers are accessible and `redeem_reward_atomic` was verified present through a non-mutating missing-order probe. Reward tokens now persist from reward page to product and checkout, checkout calls atomic redemption using the normalized owner phone, blocks referral stacking, recalculates total/deposit after accepted credit, and reports safe errors. A full hosted redemption transaction still needs an isolated fixture test.
-- Migration 7 is authored locally but **NOT APPLIED**. It compensates failed Paystack initialization by releasing reserved stock, restoring consumed reward credit, rejecting unfinished attribution and recording the failure. It also prevents duplicate open balance charges and marks a balance link used after verified payment.
+- Migration 7 is applied and hosted-verified. An isolated temporary-record test redeemed ₦500 credit, rejected a duplicate redemption, compensated the failed checkout, restored the credit, accepted one open balance payment and rejected the duplicate; all temporary records were cleaned up. Stock-reservation compensation and verified Paystack completion still need provider-path coverage.
 - Reward page now resolves only the hashed bearer token and displays hosted seller, amount, status, expiry and campaign redemption destination.
 - Referral/Status share actions are present only as nonfunctional buttons in some screens.
 
@@ -194,8 +194,8 @@ The application is a working, buildable Next.js product with a verified hosted S
 
 - `npm run typecheck` passes.
 - `npm run lint` passes.
-- `npm test` passes: 4 files, 35 unit tests, including adversarial money/deposit boundaries, illegal state transitions, reward/referral abuse, malformed phones and signed-value tampering.
-- `npm run build` passes after the 2026-07-19 branding and adversarial-test changes, generating 32 optimized static/dynamic application routes.
+- `npm test` passes: 5 files, 38 unit tests, including adversarial money/deposit boundaries, illegal state transitions, reward/referral abuse, malformed phones, signed-value tampering and mobile/desktop gesture classification.
+- `npm run build` passes after the 2026-07-19 mobile gesture, reward and balance-payment changes, generating 33 optimized static/dynamic application routes.
 - Hosted schema and seed counts verified through service-role read-only checks.
 - Hosted anonymous RLS isolation and public RPC access verified.
 - Mobile and desktop browser assertions cover landing, guest product-to-checkout, order tracking, and policy disclosure; every assertion has passed.
@@ -217,7 +217,7 @@ Cash wallets/withdrawals, loans, escrow claims, BNPL, credit scoring, unverified
 
 ## Immediate next execution order
 
-1. Apply and hosted-verify migration 7, then run isolated hosted reward redemption, compensation and balance-payment concurrency tests.
+1. Run real Paystack test-mode checkout/webhook/balance completion and stock-reservation compensation coverage.
 2. Finish database-backed rate-limit wiring for checkout, login and bearer-token lookup.
 3. Finish payment onboarding and media record linking; seller onboarding and authenticated campaign creation are already hosted-verified.
 4. Connect seller operations, restock, substitutions, reports and exports.
