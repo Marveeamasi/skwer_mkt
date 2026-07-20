@@ -1,3 +1,163 @@
-import Link from "next/link";import {notFound} from "next/navigation";import {Copy,MessageCircle,Share2} from "lucide-react";import {hashToken} from "@/lib/security/tokens";import {createAdminClient} from "@/lib/supabase/admin";import {isSupabaseConfigured} from "@/lib/supabase/configured";import {formatNaira} from "@/lib/money";export const metadata={title:"Track order",robots:{index:false,follow:false}};
-interface EventView{event_type?:string;public_message?:string;created_at:string}interface ItemView{product_name_snapshot:string;variant_snapshot:Record<string,string>;quantity:number}interface SellerView{business_name:string;whatsapp_phone:string;pickup_note:string}interface OrderView{public_reference:string;status:string;total_due_kobo:number;total_paid_kobo:number;fulfilment_method:string;seller_buyer_message?:string;seller:SellerView|SellerView[];items:ItemView[];events:EventView[]}
-export default async function Page({params}:{params:Promise<{publicToken:string}>}){const {publicToken}=await params;let order:OrderView|null=null;if(isSupabaseConfigured()){const {data}=await createAdminClient().from("orders").select("public_reference,status,total_due_kobo,total_paid_kobo,fulfilment_method,seller_buyer_message,created_at,seller:seller_businesses(business_name,whatsapp_phone,pickup_note),items:order_items(product_name_snapshot,variant_snapshot,quantity),events:order_events(event_type,public_message,created_at)").eq("public_token_hash",hashToken(publicToken)).single();order=data as unknown as OrderView|null}else if(publicToken==="demo-order-token")order={public_reference:"SKW-DEMO-A1",status:"paid",total_due_kobo:1080000,total_paid_kobo:1080000,fulfilment_method:"pickup",seller_buyer_message:"We are confirming your pickup time.",seller:{business_name:"Amara Beauty",whatsapp_phone:"2348030000000",pickup_note:"Pickup in GRA after confirmation."},items:[{product_name_snapshot:"Soft Glam Set",variant_snapshot:{option1:"Warm",option2:"Medium"},quantity:1}],events:[{public_message:"Payment confirmed",created_at:new Date().toISOString()}]};if(!order)notFound();const seller=Array.isArray(order.seller)?order.seller[0]:order.seller,events=order.events?.length?order.events:[{public_message:"Order created",created_at:new Date().toISOString()}];return <main className="public-page"><div className="checkout-shell"><header className="checkout-head"><Link className="brand" href="/"><span className="brand-mark">↗</span>Order {order.public_reference}</Link><span className="badge">{order.status.replaceAll("_"," ")}</span></header><section className="checkout-card"><h1>{order.items?.[0]?.product_name_snapshot}</h1><p>Sold by <strong>{seller?.business_name}</strong></p><div className="order-summary"><p><span>Amount paid</span><strong>{formatNaira(Number(order.total_paid_kobo))}</strong></p><p><span>Outstanding balance</span><strong>{formatNaira(Math.max(0,Number(order.total_due_kobo)-Number(order.total_paid_kobo)))}</strong></p><p><span>Fulfilment</span><strong>{order.fulfilment_method.replaceAll("_"," ")}</strong></p></div><h2>Order progress</h2><div className="timeline">{events.map((e,i)=><div className="timeline-item" key={`${e.created_at}-${i}`}><div><strong>{e.public_message??e.event_type}</strong><small>{new Date(e.created_at).toLocaleString("en-NG")}</small></div></div>)}</div>{order.seller_buyer_message&&<p className="notice">Seller message: {order.seller_buyer_message}</p>}<div className="hero-actions"><button className="button"><Copy size={17}/> Save order link</button><a className="button button-secondary" href={`https://wa.me/${seller?.whatsapp_phone}`}><MessageCircle size={17}/> Chat with seller</a><button className="button button-secondary"><Share2 size={17}/> Share and earn</button></div></section></div></main>}
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Copy, MessageCircle, Share2 } from "lucide-react";
+import { hashToken } from "@/lib/security/tokens";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { isSupabaseConfigured } from "@/lib/supabase/configured";
+import { formatNaira } from "@/lib/money";
+export const metadata = {
+  title: "Track order",
+  robots: { index: false, follow: false },
+};
+interface EventView {
+  event_type?: string;
+  public_message?: string;
+  created_at: string;
+}
+interface ItemView {
+  product_name_snapshot: string;
+  variant_snapshot: Record<string, string>;
+  quantity: number;
+}
+interface SellerView {
+  business_name: string;
+  whatsapp_phone: string;
+  pickup_note: string;
+}
+interface OrderView {
+  public_reference: string;
+  status: string;
+  total_due_kobo: number;
+  total_paid_kobo: number;
+  fulfilment_method: string;
+  seller_buyer_message?: string;
+  seller: SellerView | SellerView[];
+  items: ItemView[];
+  events: EventView[];
+}
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ publicToken: string }>;
+}) {
+  const { publicToken } = await params;
+  let order: OrderView | null = null;
+  if (isSupabaseConfigured()) {
+    const { data } = await createAdminClient()
+      .from("orders")
+      .select(
+        "public_reference,status,total_due_kobo,total_paid_kobo,fulfilment_method,seller_buyer_message,created_at,seller:seller_businesses(business_name,whatsapp_phone,pickup_note),items:order_items(product_name_snapshot,variant_snapshot,quantity),events:order_events(event_type,public_message,created_at)",
+      )
+      .eq("public_token_hash", hashToken(publicToken))
+      .single();
+    order = data as unknown as OrderView | null;
+  } else if (publicToken === "demo-order-token")
+    order = {
+      public_reference: "SKW-DEMO-A1",
+      status: "paid",
+      total_due_kobo: 1080000,
+      total_paid_kobo: 1080000,
+      fulfilment_method: "pickup",
+      seller_buyer_message: "We are confirming your pickup time.",
+      seller: {
+        business_name: "Amara Beauty",
+        whatsapp_phone: "2348030000000",
+        pickup_note: "Pickup in GRA after confirmation.",
+      },
+      items: [
+        {
+          product_name_snapshot: "Soft Glam Set",
+          variant_snapshot: { option1: "Warm", option2: "Medium" },
+          quantity: 1,
+        },
+      ],
+      events: [
+        {
+          public_message: "Payment confirmed",
+          created_at: new Date().toISOString(),
+        },
+      ],
+    };
+  if (!order) notFound();
+  const seller = Array.isArray(order.seller) ? order.seller[0] : order.seller,
+    events = order.events?.length
+      ? order.events
+      : [
+          {
+            public_message: "Order created",
+            created_at: new Date().toISOString(),
+          },
+        ];
+  return (
+    <main className="public-page">
+      <div className="checkout-shell">
+        <header className="checkout-head">
+          <Link className="brand" href="/">
+            <span className="brand-mark">↗</span>Order {order.public_reference}
+          </Link>
+          <span className="badge">{order.status.replaceAll("_", " ")}</span>
+        </header>
+        <section className="checkout-card">
+          <h1>{order.items?.[0]?.product_name_snapshot}</h1>
+          <p>
+            Sold by <strong>{seller?.business_name}</strong>
+          </p>
+          <div className="order-summary">
+            <p>
+              <span>Amount paid</span>
+              <strong>{formatNaira(Number(order.total_paid_kobo))}</strong>
+            </p>
+            <p>
+              <span>Outstanding balance</span>
+              <strong>
+                {formatNaira(
+                  Math.max(
+                    0,
+                    Number(order.total_due_kobo) -
+                      Number(order.total_paid_kobo),
+                  ),
+                )}
+              </strong>
+            </p>
+            <p>
+              <span>Fulfilment</span>
+              <strong>{order.fulfilment_method.replaceAll("_", " ")}</strong>
+            </p>
+          </div>
+          <h2>Order progress</h2>
+          <div className="timeline">
+            {events.map((e, i) => (
+              <div className="timeline-item" key={`${e.created_at}-${i}`}>
+                <div>
+                  <strong>{e.public_message ?? e.event_type}</strong>
+                  <small>
+                    {new Date(e.created_at).toLocaleString("en-NG")}
+                  </small>
+                </div>
+              </div>
+            ))}
+          </div>
+          {order.seller_buyer_message && (
+            <p className="notice">
+              Seller message: {order.seller_buyer_message}
+            </p>
+          )}
+          <div className="hero-actions">
+            <button className="button">
+              <Copy size={17} /> Save order link
+            </button>
+            <a
+              className="button button-secondary"
+              href={`https://wa.me/${seller?.whatsapp_phone}`}
+            >
+              <MessageCircle size={17} /> Chat with seller
+            </a>
+            <button className="button button-secondary">
+              <Share2 size={17} /> Share and earn
+            </button>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}

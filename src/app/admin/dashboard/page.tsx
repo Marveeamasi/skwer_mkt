@@ -1,1 +1,74 @@
-import {formatNaira} from "@/lib/money";export default function Page(){return <><header className="app-topbar"><div><h1>Platform overview</h1><p>Pilot health, money movement and items needing review.</p></div><span className="badge">Test mode</span></header><section className="metric-grid"><article className="metric-card"><small>Gross merchandise value</small><strong>{formatNaira(45200000)}</strong></article><article className="metric-card"><small>Platform revenue</small><strong>{formatNaira(1180000)}</strong></article><article className="metric-card"><small>Reward liability</small><strong>{formatNaira(420000)}</strong></article><article className="metric-card"><small>Active sellers</small><strong>4</strong></article></section><section className="dashboard-grid"><article className="panel"><h2>Payment health</h2><div className="order-summary"><p><span>Successful transactions</span><strong>41</strong></p><p><span>Failed or abandoned</span><strong>9</strong></p><p><span>Amount mismatches</span><strong>0</strong></p><p><span>Webhook failures</span><strong>0</strong></p></div></article><article className="panel"><h2>Needs review</h2><div className="attention-list"><div className="attention"><span className="attention-icon">!</span><div><strong>2 sellers awaiting approval</strong><small>Review business and payment status</small></div></div><div className="attention"><span className="attention-icon">!</span><div><strong>1 suspicious reward</strong><small>Combined fraud signals</small></div></div></div></article></section></>}
+import { formatNaira } from "@/lib/money";
+export default function Page() {
+  return (
+    <>
+      <header className="app-topbar">
+        <div>
+          <h1>Platform overview</h1>
+          <p>Pilot health, money movement and items needing review.</p>
+        </div>
+        <span className="badge">Test mode</span>
+      </header>
+      <section className="metric-grid">
+        <article className="metric-card">
+          <small>Gross merchandise value</small>
+          <strong>{formatNaira(45200000)}</strong>
+        </article>
+        <article className="metric-card">
+          <small>Platform revenue</small>
+          <strong>{formatNaira(1180000)}</strong>
+        </article>
+        <article className="metric-card">
+          <small>Reward liability</small>
+          <strong>{formatNaira(420000)}</strong>
+        </article>
+        <article className="metric-card">
+          <small>Active sellers</small>
+          <strong>4</strong>
+        </article>
+      </section>
+      <section className="dashboard-grid">
+        <article className="panel">
+          <h2>Payment health</h2>
+          <div className="order-summary">
+            <p>
+              <span>Successful transactions</span>
+              <strong>41</strong>
+            </p>
+            <p>
+              <span>Failed or abandoned</span>
+              <strong>9</strong>
+            </p>
+            <p>
+              <span>Amount mismatches</span>
+              <strong>0</strong>
+            </p>
+            <p>
+              <span>Webhook failures</span>
+              <strong>0</strong>
+            </p>
+          </div>
+        </article>
+        <article className="panel">
+          <h2>Needs review</h2>
+          <div className="attention-list">
+            <div className="attention">
+              <span className="attention-icon">!</span>
+              <div>
+                <strong>2 sellers awaiting approval</strong>
+                <small>Review business and payment status</small>
+              </div>
+            </div>
+            <div className="attention">
+              <span className="attention-icon">!</span>
+              <div>
+                <strong>1 suspicious reward</strong>
+                <small>Combined fraud signals</small>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+    </>
+  );
+}

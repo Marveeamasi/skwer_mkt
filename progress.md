@@ -1,6 +1,6 @@
 # SKWER MKT — Implementation Progress Book
 
-Last updated: 2026-07-19 (Africa/Lagos)
+Last updated: 2026-07-20 (Africa/Lagos)
 
 Status meanings:
 
@@ -16,7 +16,7 @@ The application is a working, buildable Next.js product with a verified hosted S
 ### Verified totals
 
 - Hosted database: 4 sellers, 8 campaigns, 4 orders, 1 available reward, 1 restock request, 1 substitution offer, 1 active fee configuration.
-- Unit tests: 40 passing across pricing, security, tokens, order transitions, money/deposit boundaries, phone validation, signed-value tampering, referrals, rewards, attribution, mobile theme-gesture classification, and generic EmailJS payload behavior.
+- Unit tests: 41 passing across pricing, security, tokens, order transitions, money/deposit boundaries, phone validation, signed-value tampering, referrals, rewards, attribution, mobile theme-gesture classification, generic EmailJS payload behavior, and provider fallback reporting.
 - Production build: passing after the latest hosted-environment changes; 32 routes/pages were generated, including the SVG icon and web manifest.
 - TypeScript strict check: passing.
 - ESLint: passing.
@@ -84,6 +84,7 @@ The application is a working, buildable Next.js product with a verified hosted S
 - Login and registration now have accessible show/hide password controls. Signup keeps the password only in React memory instead of plaintext `sessionStorage`. Resend has an independent truthful loading state, recently issued unexpired codes remain valid despite mail delays, and UI wording distinguishes SMTP acceptance from inbox delivery.
 - Public DNS verification found SPF and strict quarantine DMARC for `enthernetservices.com`; direct SMTP mail is spam-foldered/delayed. Server-only EmailJS is now the configured primary provider, with the Vercel Nodemailer service as automatic fallback; EmailJS credentials never enter the browser bundle. Real OTP requests through the local registration route returned 200 for both the support inbox and `amasimarvellous@gmail.com`. Actual inbox receipt and successful account creation still require confirmation.
 - EmailJS now uses one reusable text template for every transactional purpose. The only template parameters are `to`, `to_email`, `subject`, `text`, `from_name`, and `reply_to`; subjects and complete plain-text bodies are generated per flow. The reward-ready flow now supplies its own complete plain-text message and secure link. EmailJS private API access is optional, while the Vercel provider continues to receive HTML and text plus its server secret. Focused adapter tests pass for both public-key-only and optional-private-key configurations.
+- 2026-07-20 registration diagnosis: EmailJS explicitly rejects the server-side REST request because account-level non-browser API access is disabled. The Vercel SMTP fallback then returns acceptance without confirmed inbox delivery, which caused the misleading success experience. The OTP API and registration UI now disclose primary-provider failure/fallback use instead of implying delivery. Enabling non-browser API access in the EmailJS Account Security dashboard and completing a real-inbox OTP/account test remain an EXTERNAL GATE; this cannot safely be bypassed by exposing OTP generation in browser code.
 - OTP-step DOM reuse was fixed with keyed steps and a controlled numeric code field, preventing the email address from appearing in the verification-code input. Resend has independent loading copy and all recently issued unexpired codes remain usable when delivery is delayed.
 - Seller onboarding business-details UI now persists through an authenticated server endpoint with normalized phone data and an audit record. Payment onboarding and invite-token enforcement remain.
 - Login works through Supabase password auth; forgot-password screen does not yet send/complete recovery through the custom email service.
@@ -198,7 +199,7 @@ The application is a working, buildable Next.js product with a verified hosted S
 
 - `npm run typecheck` passes.
 - `npm run lint` passes.
-- `npm test` passes: 6 files, 40 unit tests, including adversarial money/deposit boundaries, illegal state transitions, reward/referral abuse, malformed phones, signed-value tampering, mobile/desktop gesture classification, and generic EmailJS template payloads.
+- `npm test` passes: 6 files, 41 unit tests, including adversarial money/deposit boundaries, illegal state transitions, reward/referral abuse, malformed phones, signed-value tampering, mobile/desktop gesture classification, generic EmailJS template payloads, and fallback diagnostics.
 - `npm run build` passes after the 2026-07-19 mobile gesture, reward and balance-payment changes, generating 33 optimized static/dynamic application routes.
 - Hosted schema and seed counts verified through service-role read-only checks.
 - Hosted anonymous RLS isolation and public RPC access verified.

@@ -1,1 +1,49 @@
-export const allowedOrderTransitions:Record<string,readonly string[]>={payment_pending:["partially_paid","paid","payment_failed","expired","cancelled"],partially_paid:["paid","cancelled","refund_pending"],paid:["confirmed","processing","awaiting_stock","refund_pending","cancelled"],confirmed:["processing","awaiting_stock","ready_for_pickup","out_for_delivery","refund_pending"],processing:["awaiting_stock","ready_for_pickup","out_for_delivery","refund_pending"],awaiting_stock:["processing","ready_for_pickup","refund_pending","cancelled"],ready_for_pickup:["picked_up","refund_pending"],out_for_delivery:["delivered","refund_pending"],delivered:["refund_pending","partially_refunded","refunded"],picked_up:["refund_pending","partially_refunded","refunded"],refund_pending:["partially_refunded","refunded"],partially_refunded:["refunded"],refunded:[],cancelled:[],payment_failed:["payment_pending","expired"],expired:[]};export function canTransition(from:string,to:string){return allowedOrderTransitions[from]?.includes(to)??false}
+export const allowedOrderTransitions: Record<string, readonly string[]> = {
+  payment_pending: [
+    "partially_paid",
+    "paid",
+    "payment_failed",
+    "expired",
+    "cancelled",
+  ],
+  partially_paid: ["paid", "cancelled", "refund_pending"],
+  paid: [
+    "confirmed",
+    "processing",
+    "awaiting_stock",
+    "refund_pending",
+    "cancelled",
+  ],
+  confirmed: [
+    "processing",
+    "awaiting_stock",
+    "ready_for_pickup",
+    "out_for_delivery",
+    "refund_pending",
+  ],
+  processing: [
+    "awaiting_stock",
+    "ready_for_pickup",
+    "out_for_delivery",
+    "refund_pending",
+  ],
+  awaiting_stock: [
+    "processing",
+    "ready_for_pickup",
+    "refund_pending",
+    "cancelled",
+  ],
+  ready_for_pickup: ["picked_up", "refund_pending"],
+  out_for_delivery: ["delivered", "refund_pending"],
+  delivered: ["refund_pending", "partially_refunded", "refunded"],
+  picked_up: ["refund_pending", "partially_refunded", "refunded"],
+  refund_pending: ["partially_refunded", "refunded"],
+  partially_refunded: ["refunded"],
+  refunded: [],
+  cancelled: [],
+  payment_failed: ["payment_pending", "expired"],
+  expired: [],
+};
+export function canTransition(from: string, to: string) {
+  return allowedOrderTransitions[from]?.includes(to) ?? false;
+}

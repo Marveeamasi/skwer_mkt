@@ -1,6 +1,161 @@
 /* eslint-disable react-hooks/purity -- server-rendered report window is intentionally evaluated per request */
-import {createClient} from "@/lib/supabase/server";
-import {formatNaira} from "@/lib/money";
-const completed=["paid","confirmed","processing","awaiting_stock","ready_for_pickup","out_for_delivery","delivered","picked_up","refund_pending","partially_refunded"];
-interface Order{total_paid_kobo:number;seller_target_kobo:number;referred_by_referral_id:string|null;campaign:{seller_purchase_cost_kobo:number|null;product:{name:string}|{name:string}[]}|{seller_purchase_cost_kobo:number|null;product:{name:string}|{name:string}[]}[];items:{quantity:number}[]}
-export default async function Page(){const db=await createClient(),start=new Date(Date.now()-7*86400000).toISOString(),{data}=await db.from("orders").select("total_paid_kobo,seller_target_kobo,referred_by_referral_id,campaign:campaigns(seller_purchase_cost_kobo,product:products(name)),items:order_items(quantity)").gte("created_at",start).in("status",completed),orders=(data??[]) as unknown as Order[],gross=orders.reduce((sum,order)=>sum+Number(order.total_paid_kobo),0),proceeds=orders.reduce((sum,order)=>sum+Number(order.seller_target_kobo),0),referred=orders.filter(order=>order.referred_by_referral_id).length,cost=orders.reduce((sum,order)=>{const campaign=Array.isArray(order.campaign)?order.campaign[0]:order.campaign;return sum+Number(campaign?.seller_purchase_cost_kobo??0)*order.items.reduce((count,item)=>count+Number(item.quantity),0)},0),byCampaign=new Map<string,{orders:number;sales:number}>();for(const order of orders){const campaign=Array.isArray(order.campaign)?order.campaign[0]:order.campaign,product=Array.isArray(campaign?.product)?campaign.product[0]:campaign?.product,name=product?.name??"Product",current=byCampaign.get(name)??{orders:0,sales:0};current.orders++;current.sales+=Number(order.total_paid_kobo);byCampaign.set(name,current)}return <><header className="app-topbar"><div><h1>Last 7 days</h1><p>Only your hosted verified orders are included.</p></div></header><section className="metric-grid"><article className="metric-card"><small>Gross paid</small><strong>{formatNaira(gross)}</strong><em>{orders.length} orders</em></article><article className="metric-card"><small>Expected proceeds</small><strong>{formatNaira(proceeds)}</strong></article><article className="metric-card"><small>Referred orders</small><strong>{referred}</strong><em>{orders.length?Math.round(referred/orders.length*100):0}% of orders</em></article><article className="metric-card"><small>Estimated profit</small><strong>{formatNaira(Math.max(0,proceeds-cost))}</strong><em>Where costs were entered</em></article></section><section className="dashboard-grid"><article className="panel"><h2>Sales by campaign</h2>{byCampaign.size?<div className="table-wrap" data-horizontal-scroll><table className="data-table"><tbody>{[...byCampaign].map(([name,value])=><tr key={name}><td><strong>{name}</strong></td><td>{value.orders} orders</td><td>{formatNaira(value.sales)}</td></tr>)}</tbody></table></div>:<div className="empty-state"><h2>No completed sales this week</h2><p>Share an active campaign and verified orders will appear here automatically.</p></div>}</article><article className="panel"><h2>Referral performance</h2><div className="order-summary"><p><span>Completed orders</span><strong>{orders.length}</strong></p><p><span>Paid referred orders</span><strong>{referred}</strong></p><p><span>Direct orders</span><strong>{orders.length-referred}</strong></p></div></article></section><p className="notice">Estimated profit subtracts only purchase costs you entered. Delivery, tax, refunds and other expenses may change the result; this is not accounting or tax advice.</p></>}
+import { createClient } from "@/lib/supabase/server";
+import { formatNaira } from "@/lib/money";
+const completed = [
+  "paid",
+  "confirmed",
+  "processing",
+  "awaiting_stock",
+  "ready_for_pickup",
+  "out_for_delivery",
+  "delivered",
+  "picked_up",
+  "refund_pending",
+  "partially_refunded",
+];
+interface Order {
+  total_paid_kobo: number;
+  seller_target_kobo: number;
+  referred_by_referral_id: string | null;
+  campaign:
+    | {
+        seller_purchase_cost_kobo: number | null;
+        product: { name: string } | { name: string }[];
+      }
+    | {
+        seller_purchase_cost_kobo: number | null;
+        product: { name: string } | { name: string }[];
+      }[];
+  items: { quantity: number }[];
+}
+export default async function Page() {
+  const db = await createClient(),
+    start = new Date(Date.now() - 7 * 86400000).toISOString(),
+    { data } = await db
+      .from("orders")
+      .select(
+        "total_paid_kobo,seller_target_kobo,referred_by_referral_id,campaign:campaigns(seller_purchase_cost_kobo,product:products(name)),items:order_items(quantity)",
+      )
+      .gte("created_at", start)
+      .in("status", completed),
+    orders = (data ?? []) as unknown as Order[],
+    gross = orders.reduce(
+      (sum, order) => sum + Number(order.total_paid_kobo),
+      0,
+    ),
+    proceeds = orders.reduce(
+      (sum, order) => sum + Number(order.seller_target_kobo),
+      0,
+    ),
+    referred = orders.filter((order) => order.referred_by_referral_id).length,
+    cost = orders.reduce((sum, order) => {
+      const campaign = Array.isArray(order.campaign)
+        ? order.campaign[0]
+        : order.campaign;
+      return (
+        sum +
+        Number(campaign?.seller_purchase_cost_kobo ?? 0) *
+          order.items.reduce((count, item) => count + Number(item.quantity), 0)
+      );
+    }, 0),
+    byCampaign = new Map<string, { orders: number; sales: number }>();
+  for (const order of orders) {
+    const campaign = Array.isArray(order.campaign)
+        ? order.campaign[0]
+        : order.campaign,
+      product = Array.isArray(campaign?.product)
+        ? campaign.product[0]
+        : campaign?.product,
+      name = product?.name ?? "Product",
+      current = byCampaign.get(name) ?? { orders: 0, sales: 0 };
+    current.orders++;
+    current.sales += Number(order.total_paid_kobo);
+    byCampaign.set(name, current);
+  }
+  return (
+    <>
+      <header className="app-topbar">
+        <div>
+          <h1>Last 7 days</h1>
+          <p>Only your hosted verified orders are included.</p>
+        </div>
+      </header>
+      <section className="metric-grid">
+        <article className="metric-card">
+          <small>Gross paid</small>
+          <strong>{formatNaira(gross)}</strong>
+          <em>{orders.length} orders</em>
+        </article>
+        <article className="metric-card">
+          <small>Expected proceeds</small>
+          <strong>{formatNaira(proceeds)}</strong>
+        </article>
+        <article className="metric-card">
+          <small>Referred orders</small>
+          <strong>{referred}</strong>
+          <em>
+            {orders.length ? Math.round((referred / orders.length) * 100) : 0}%
+            of orders
+          </em>
+        </article>
+        <article className="metric-card">
+          <small>Estimated profit</small>
+          <strong>{formatNaira(Math.max(0, proceeds - cost))}</strong>
+          <em>Where costs were entered</em>
+        </article>
+      </section>
+      <section className="dashboard-grid">
+        <article className="panel">
+          <h2>Sales by campaign</h2>
+          {byCampaign.size ? (
+            <div className="table-wrap" data-horizontal-scroll>
+              <table className="data-table">
+                <tbody>
+                  {[...byCampaign].map(([name, value]) => (
+                    <tr key={name}>
+                      <td>
+                        <strong>{name}</strong>
+                      </td>
+                      <td>{value.orders} orders</td>
+                      <td>{formatNaira(value.sales)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="empty-state">
+              <h2>No completed sales this week</h2>
+              <p>
+                Share an active campaign and verified orders will appear here
+                automatically.
+              </p>
+            </div>
+          )}
+        </article>
+        <article className="panel">
+          <h2>Referral performance</h2>
+          <div className="order-summary">
+            <p>
+              <span>Completed orders</span>
+              <strong>{orders.length}</strong>
+            </p>
+            <p>
+              <span>Paid referred orders</span>
+              <strong>{referred}</strong>
+            </p>
+            <p>
+              <span>Direct orders</span>
+              <strong>{orders.length - referred}</strong>
+            </p>
+          </div>
+        </article>
+      </section>
+      <p className="notice">
+        Estimated profit subtracts only purchase costs you entered. Delivery,
+        tax, refunds and other expenses may change the result; this is not
+        accounting or tax advice.
+      </p>
+    </>
+  );
+}

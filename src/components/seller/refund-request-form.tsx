@@ -1,3 +1,82 @@
 "use client";
-import {FormEvent,useState} from "react";
-export function RefundRequestForm({orderId,maxKobo}:{orderId:string;maxKobo:number}){const[open,setOpen]=useState(false),[busy,setBusy]=useState(false),[message,setMessage]=useState(""),[error,setError]=useState("");async function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();setBusy(true);setError("");const form=new FormData(event.currentTarget);try{const response=await fetch(`/api/seller/orders/${orderId}/refund-request`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({amountKobo:Math.round(Number(form.get("amount"))*100),reason:form.get("reason")})}),result=await response.json();if(!response.ok)throw new Error(result.error);setMessage("Refund request sent for admin review. The buyer will see updates on the order page.")}catch(caught){setError(caught instanceof Error?caught.message:"Could not request refund")}finally{setBusy(false)}}if(message)return <p className="notice">{message}</p>;if(!open)return <button type="button" className="button button-small button-secondary" onClick={()=>setOpen(true)}>Request refund</button>;return <form className="form-stack" onSubmit={submit}><label>Refund amount (₦)<input name="amount" type="number" min="1" max={maxKobo/100} step="0.01" required/></label><label>Reason for admin and payment records<textarea name="reason" minLength={10} maxLength={500} required/></label><button className="button button-small" disabled={busy}>{busy?"Submitting…":"Submit refund request"}</button>{error&&<p className="form-error" role="alert">{error}</p>}</form>}
+import { FormEvent, useState } from "react";
+export function RefundRequestForm({
+  orderId,
+  maxKobo,
+}: {
+  orderId: string;
+  maxKobo: number;
+}) {
+  const [open, setOpen] = useState(false),
+    [busy, setBusy] = useState(false),
+    [message, setMessage] = useState(""),
+    [error, setError] = useState("");
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    const form = new FormData(event.currentTarget);
+    try {
+      const response = await fetch(
+          `/api/seller/orders/${orderId}/refund-request`,
+          {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              amountKobo: Math.round(Number(form.get("amount")) * 100),
+              reason: form.get("reason"),
+            }),
+          },
+        ),
+        result = await response.json();
+      if (!response.ok) throw new Error(result.error);
+      setMessage(
+        "Refund request sent for admin review. The buyer will see updates on the order page.",
+      );
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "Could not request refund",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+  if (message) return <p className="notice">{message}</p>;
+  if (!open)
+    return (
+      <button
+        type="button"
+        className="button button-small button-secondary"
+        onClick={() => setOpen(true)}
+      >
+        Request refund
+      </button>
+    );
+  return (
+    <form className="form-stack" onSubmit={submit}>
+      <label>
+        Refund amount (₦)
+        <input
+          name="amount"
+          type="number"
+          min="1"
+          max={maxKobo / 100}
+          step="0.01"
+          required
+        />
+      </label>
+      <label>
+        Reason for admin and payment records
+        <textarea name="reason" minLength={10} maxLength={500} required />
+      </label>
+      <button className="button button-small" disabled={busy}>
+        {busy ? "Submitting…" : "Submit refund request"}
+      </button>
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
+    </form>
+  );
+}

@@ -1,1 +1,20 @@
-import {ResourcePage} from "@/components/admin/resource-page";export default function Page(){return <ResourcePage title="Rewards" description="Review attribution, fraud signals and reward liability." columns={["Reward","Seller","Amount","State","Fraud signal"]} rows={[["RWD-7XA","Amara Beauty","₦500","Available","None"],["RWD-9PB","Dami Styles","₦300","Pending review","Phone + email match"]]}/>}
+import { ResourcePage } from "@/components/admin/resource-page";
+export default function Page() {
+  return (
+    <ResourcePage
+      title="Rewards"
+      description="Review attribution, fraud signals and reward liability."
+      columns={["Reward", "Seller", "Amount", "State", "Fraud signal"]}
+      rows={[
+        ["RWD-7XA", "Amara Beauty", "₦500", "Available", "None"],
+        [
+          "RWD-9PB",
+          "Dami Styles",
+          "₦300",
+          "Pending review",
+          "Phone + email match",
+        ],
+      ]}
+    />
+  );
+}

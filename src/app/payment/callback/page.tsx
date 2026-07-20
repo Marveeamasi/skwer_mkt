@@ -1,1 +1,38 @@
-import Link from "next/link";import {PaymentResult} from "@/components/buyer/payment-result";import {publicConfig} from "@/lib/config";export const metadata={title:"Payment confirmation",robots:{index:false,follow:false}};export default async function Page({searchParams}:{searchParams:Promise<{reference?:string;trxref?:string;demo?:string}>}){const q=await searchParams,reference=q.reference??q.trxref;return <main className="public-page"><div className="checkout-shell"><header className="checkout-head"><Link className="brand" href="/"><span className="brand-mark">↗</span>{publicConfig.NEXT_PUBLIC_APP_SHORT_NAME}</Link><span className="badge">Secure verification</span></header><section className="checkout-card">{reference?<PaymentResult reference={reference} demo={q.demo==="1"}/>:<div className="empty-state"><h1>Missing payment reference</h1><p>Return to the seller&apos;s sales link or contact support.</p></div>}</section></div></main>}
+import Link from "next/link";
+import { PaymentResult } from "@/components/buyer/payment-result";
+import { publicConfig } from "@/lib/config";
+export const metadata = {
+  title: "Payment confirmation",
+  robots: { index: false, follow: false },
+};
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ reference?: string; trxref?: string; demo?: string }>;
+}) {
+  const q = await searchParams,
+    reference = q.reference ?? q.trxref;
+  return (
+    <main className="public-page">
+      <div className="checkout-shell">
+        <header className="checkout-head">
+          <Link className="brand" href="/">
+            <span className="brand-mark">↗</span>
+            {publicConfig.NEXT_PUBLIC_APP_SHORT_NAME}
+          </Link>
+          <span className="badge">Secure verification</span>
+        </header>
+        <section className="checkout-card">
+          {reference ? (
+            <PaymentResult reference={reference} demo={q.demo === "1"} />
+          ) : (
+            <div className="empty-state">
+              <h1>Missing payment reference</h1>
+              <p>Return to the seller&apos;s sales link or contact support.</p>
+            </div>
+          )}
+        </section>
+      </div>
+    </main>
+  );
+}

@@ -1,1 +1,25 @@
-import {NextResponse} from "next/server";import {nanoid} from "nanoid";import {createClient} from "@/lib/supabase/server";import {mediaProvider} from "@/lib/media/provider";export async function POST(request:Request){try{const supabase=await createClient(),{data}=await supabase.auth.getClaims(),userId=data?.claims?.sub;if(!userId)return NextResponse.json({error:"Sign in required"},{status:401});const form=await request.formData(),file=form.get("file");if(!(file instanceof File))throw new Error("Choose a file");const extension=file.name.split(".").pop()?.toLowerCase()??"bin",path=`${userId}/${Date.now()}-${nanoid(10)}.${extension}`,asset=await mediaProvider().upload(path,file);return NextResponse.json(asset)}catch(error){return NextResponse.json({error:error instanceof Error?error.message:"Upload failed"},{status:400})}}
+import { NextResponse } from "next/server";
+import { nanoid } from "nanoid";
+import { createClient } from "@/lib/supabase/server";
+import { mediaProvider } from "@/lib/media/provider";
+export async function POST(request: Request) {
+  try {
+    const supabase = await createClient(),
+      { data } = await supabase.auth.getClaims(),
+      userId = data?.claims?.sub;
+    if (!userId)
+      return NextResponse.json({ error: "Sign in required" }, { status: 401 });
+    const form = await request.formData(),
+      file = form.get("file");
+    if (!(file instanceof File)) throw new Error("Choose a file");
+    const extension = file.name.split(".").pop()?.toLowerCase() ?? "bin",
+      path = `${userId}/${Date.now()}-${nanoid(10)}.${extension}`,
+      asset = await mediaProvider().upload(path, file);
+    return NextResponse.json(asset);
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Upload failed" },
+      { status: 400 },
+    );
+  }
+}

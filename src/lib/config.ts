@@ -3,7 +3,10 @@ import { z } from "zod";
 const publicSchema = z.object({
   NEXT_PUBLIC_APP_NAME: z.string().min(1).default("SKWER MKT"),
   NEXT_PUBLIC_APP_SHORT_NAME: z.string().min(1).default("SKWER"),
-  NEXT_PUBLIC_APP_TAGLINE: z.string().min(1).default("One buyer can bring the next."),
+  NEXT_PUBLIC_APP_TAGLINE: z
+    .string()
+    .min(1)
+    .default("One buyer can bring the next."),
   NEXT_PUBLIC_APP_URL: z.url().default("http://localhost:3000"),
   NEXT_PUBLIC_SUPPORT_EMAIL: z.email().default("support@example.com"),
   NEXT_PUBLIC_SUPPORT_PHONE: z.string().default(""),

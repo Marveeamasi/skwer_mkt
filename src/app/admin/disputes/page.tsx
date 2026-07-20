@@ -1,4 +1,79 @@
-import {createClient} from "@/lib/supabase/server";
-import {formatNaira} from "@/lib/money";
-import {RefundSubmitButton} from "@/components/admin/refund-submit-button";
-export default async function Page(){const db=await createClient(),{data}=await db.from("refund_records").select("id,amount_kobo,status,reason,provider_reference,created_at,order:orders(public_reference,seller:seller_businesses(business_name))").order("created_at",{ascending:false});return <><header className="app-topbar"><div><h1>Refunds and disputes</h1><p>Approve requests, track Paystack processing and preserve evidence.</p></div></header><section className="panel">{data?.length?<div className="table-wrap" data-horizontal-scroll><table className="data-table"><thead><tr><th>Order</th><th>Seller</th><th>Amount</th><th>Reason</th><th>Status</th><th>Action</th></tr></thead><tbody>{data.map(refund=>{const order=Array.isArray(refund.order)?refund.order[0]:refund.order,seller=Array.isArray(order?.seller)?order.seller[0]:order?.seller;return <tr key={refund.id}><td><strong>{order?.public_reference}</strong></td><td>{seller?.business_name}</td><td>{formatNaira(Number(refund.amount_kobo))}</td><td>{refund.reason}</td><td><span className="badge">{refund.status}</span></td><td>{refund.status==="requested"?<RefundSubmitButton id={refund.id}/>:refund.provider_reference??"Awaiting provider"}</td></tr>})}</tbody></table></div>:<div className="empty-state"><h2>No refund requests</h2><p>Seller requests and Paystack lifecycle updates will appear here.</p></div>}</section></>}
+import { createClient } from "@/lib/supabase/server";
+import { formatNaira } from "@/lib/money";
+import { RefundSubmitButton } from "@/components/admin/refund-submit-button";
+export default async function Page() {
+  const db = await createClient(),
+    { data } = await db
+      .from("refund_records")
+      .select(
+        "id,amount_kobo,status,reason,provider_reference,created_at,order:orders(public_reference,seller:seller_businesses(business_name))",
+      )
+      .order("created_at", { ascending: false });
+  return (
+    <>
+      <header className="app-topbar">
+        <div>
+          <h1>Refunds and disputes</h1>
+          <p>
+            Approve requests, track Paystack processing and preserve evidence.
+          </p>
+        </div>
+      </header>
+      <section className="panel">
+        {data?.length ? (
+          <div className="table-wrap" data-horizontal-scroll>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Seller</th>
+                  <th>Amount</th>
+                  <th>Reason</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((refund) => {
+                  const order = Array.isArray(refund.order)
+                      ? refund.order[0]
+                      : refund.order,
+                    seller = Array.isArray(order?.seller)
+                      ? order.seller[0]
+                      : order?.seller;
+                  return (
+                    <tr key={refund.id}>
+                      <td>
+                        <strong>{order?.public_reference}</strong>
+                      </td>
+                      <td>{seller?.business_name}</td>
+                      <td>{formatNaira(Number(refund.amount_kobo))}</td>
+                      <td>{refund.reason}</td>
+                      <td>
+                        <span className="badge">{refund.status}</span>
+                      </td>
+                      <td>
+                        {refund.status === "requested" ? (
+                          <RefundSubmitButton id={refund.id} />
+                        ) : (
+                          (refund.provider_reference ?? "Awaiting provider")
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="empty-state">
+            <h2>No refund requests</h2>
+            <p>
+              Seller requests and Paystack lifecycle updates will appear here.
+            </p>
+          </div>
+        )}
+      </section>
+    </>
+  );
+}

@@ -1,7 +1,123 @@
-import {NextResponse} from "next/server";
-import {z} from "zod";
-import {createClient} from "@/lib/supabase/server";
-import {createAdminClient} from "@/lib/supabase/admin";
-import {audit} from "@/server/audit";
-const schema=z.object({amountKobo:z.number().int().positive(),reason:z.string().trim().min(10).max(500)});
-export async function POST(request:Request,{params}:{params:Promise<{id:string}>}){try{const{id}=await params,input=schema.parse(await request.json()),session=await createClient(),{data:claims}=await session.auth.getClaims(),userId=claims?.claims?.sub;if(!userId)return NextResponse.json({error:"Sign in required"},{status:401});const{data:order}=await session.from("orders").select("id,status,total_paid_kobo").eq("id",id).single();if(!order)return NextResponse.json({error:"Order not found"},{status:404});if(input.amountKobo>Number(order.total_paid_kobo))return NextResponse.json({error:"Refund cannot exceed the amount paid"},{status:400});if(!["paid","confirmed","processing","awaiting_stock","ready_for_pickup","out_for_delivery","delivered","picked_up","partially_refunded"].includes(order.status))return NextResponse.json({error:"A refund cannot be requested for this order status"},{status:409});const admin=createAdminClient(),{data:payments}=await admin.from("payments").select("id,amount_kobo").eq("order_id",id).eq("status","success").gte("amount_kobo",input.amountKobo).order("amount_kobo",{ascending:true}).limit(1);const payment=payments?.[0];if(!payment)return NextResponse.json({error:"No single verified payment can cover this refund amount. Ask support to split the refund."},{status:409});const{data:record,error}=await admin.from("refund_records").insert({order_id:id,payment_id:payment.id,amount_kobo:input.amountKobo,status:"requested",reason:input.reason,requested_by:userId,provider_summary:{orderStatusBefore:order.status}}).select("id").single();if(error?.code==="23505")return NextResponse.json({error:"This order already has an open refund request"},{status:409});if(error)throw error;await admin.from("orders").update({status:"refund_pending"}).eq("id",id);await admin.from("order_events").insert({order_id:id,event_type:"refund_requested",from_status:order.status,to_status:"refund_pending",actor_type:"seller",actor_id:userId,public_message:"Refund requested",private_metadata:{refundId:record.id,amountKobo:input.amountKobo}});await audit({actorId:userId,action:"refund.requested",resourceType:"order",resourceId:id,before:{status:order.status},after:{status:"refund_pending",amountKobo:input.amountKobo},request});return NextResponse.json({ok:true})}catch(error){return NextResponse.json({error:error instanceof Error?error.message:"Could not request refund"},{status:400})}}
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { audit } from "@/server/audit";
+const schema = z.object({
+  amountKobo: z.number().int().positive(),
+  reason: z.string().trim().min(10).max(500),
+});
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params,
+      input = schema.parse(await request.json()),
+      session = await createClient(),
+      { data: claims } = await session.auth.getClaims(),
+      userId = claims?.claims?.sub;
+    if (!userId)
+      return NextResponse.json({ error: "Sign in required" }, { status: 401 });
+    const { data: order } = await session
+      .from("orders")
+      .select("id,status,total_paid_kobo")
+      .eq("id", id)
+      .single();
+    if (!order)
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    if (input.amountKobo > Number(order.total_paid_kobo))
+      return NextResponse.json(
+        { error: "Refund cannot exceed the amount paid" },
+        { status: 400 },
+      );
+    if (
+      ![
+        "paid",
+        "confirmed",
+        "processing",
+        "awaiting_stock",
+        "ready_for_pickup",
+        "out_for_delivery",
+        "delivered",
+        "picked_up",
+        "partially_refunded",
+      ].includes(order.status)
+    )
+      return NextResponse.json(
+        { error: "A refund cannot be requested for this order status" },
+        { status: 409 },
+      );
+    const admin = createAdminClient(),
+      { data: payments } = await admin
+        .from("payments")
+        .select("id,amount_kobo")
+        .eq("order_id", id)
+        .eq("status", "success")
+        .gte("amount_kobo", input.amountKobo)
+        .order("amount_kobo", { ascending: true })
+        .limit(1);
+    const payment = payments?.[0];
+    if (!payment)
+      return NextResponse.json(
+        {
+          error:
+            "No single verified payment can cover this refund amount. Ask support to split the refund.",
+        },
+        { status: 409 },
+      );
+    const { data: record, error } = await admin
+      .from("refund_records")
+      .insert({
+        order_id: id,
+        payment_id: payment.id,
+        amount_kobo: input.amountKobo,
+        status: "requested",
+        reason: input.reason,
+        requested_by: userId,
+        provider_summary: { orderStatusBefore: order.status },
+      })
+      .select("id")
+      .single();
+    if (error?.code === "23505")
+      return NextResponse.json(
+        { error: "This order already has an open refund request" },
+        { status: 409 },
+      );
+    if (error) throw error;
+    await admin
+      .from("orders")
+      .update({ status: "refund_pending" })
+      .eq("id", id);
+    await admin
+      .from("order_events")
+      .insert({
+        order_id: id,
+        event_type: "refund_requested",
+        from_status: order.status,
+        to_status: "refund_pending",
+        actor_type: "seller",
+        actor_id: userId,
+        public_message: "Refund requested",
+        private_metadata: { refundId: record.id, amountKobo: input.amountKobo },
+      });
+    await audit({
+      actorId: userId,
+      action: "refund.requested",
+      resourceType: "order",
+      resourceId: id,
+      before: { status: order.status },
+      after: { status: "refund_pending", amountKobo: input.amountKobo },
+      request,
+    });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error ? error.message : "Could not request refund",
+      },
+      { status: 400 },
+    );
+  }
+}

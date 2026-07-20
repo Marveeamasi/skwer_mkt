@@ -1,8 +1,132 @@
-import {notFound} from "next/navigation";
-import {createClient} from "@/lib/supabase/server";
-import {formatNaira} from "@/lib/money";
-import {StatusForm} from "@/components/seller/status-form";
-import {BalanceLinkButton} from "@/components/seller/balance-link-button";
-import {Copy,MessageCircle} from "lucide-react";
-interface Row{id:string;public_reference:string;status:string;total_due_kobo:number;total_paid_kobo:number;seller_target_kobo:number;reward_funding_kobo:number;paystack_fee_estimate_kobo:number;fulfilment_method:string;customer:{full_name:string;normalized_phone:string}|{full_name:string;normalized_phone:string}[];items:{product_name_snapshot:string;variant_snapshot:Record<string,string>;quantity:number}[]}
-export default async function Page({params}:{params:Promise<{id:string}>}){const{id}=await params,db=await createClient(),{data}=await db.from("orders").select("id,public_reference,status,total_due_kobo,total_paid_kobo,seller_target_kobo,reward_funding_kobo,paystack_fee_estimate_kobo,fulfilment_method,customer:customers(full_name,normalized_phone),items:order_items(product_name_snapshot,variant_snapshot,quantity)").eq("id",id).single();if(!data)notFound();const order=data as unknown as Row,buyer=Array.isArray(order.customer)?order.customer[0]:order.customer,item=order.items[0],outstanding=Math.max(0,Number(order.total_due_kobo)-Number(order.total_paid_kobo));return <><header className="app-topbar"><div><h1>Order {order.public_reference}</h1><p>{item?.product_name_snapshot} · {order.fulfilment_method.replaceAll("_"," ")}</p></div><span className="badge">{order.status.replaceAll("_"," ")}</span></header><div className="settings-grid"><section className="panel"><h2>Fulfilment status</h2><StatusForm resource="orders" id={order.id} current={order.status} options={["confirmed","processing","awaiting_stock","ready_for_pickup","out_for_delivery","delivered","picked_up","refund_pending"]}/><div className="order-summary"><p><span>{item?.product_name_snapshot} × {item?.quantity}</span><strong>{formatNaira(Number(order.total_due_kobo))}</strong></p><p><span>Paid</span><strong>{formatNaira(Number(order.total_paid_kobo))}</strong></p><p className="total"><span>Outstanding</span><strong>{formatNaira(outstanding)}</strong></p></div>{outstanding>0&&<BalanceLinkButton orderId={order.id}/>}</section><section className="panel"><h2>Buyer and follow-up</h2><p><strong>{buyer?.full_name}</strong><br/>+{buyer?.normalized_phone}</p><a className="button button-small" href={`https://wa.me/${buyer?.normalized_phone}?text=${encodeURIComponent(`Hello ${buyer?.full_name}, here is an update on order ${order.public_reference}.`)}`}><MessageCircle size={16}/> Open WhatsApp</a><button className="button button-small button-secondary"><Copy size={16}/> Copy order reference</button><h2 style={{marginTop:28}}>Financial snapshot</h2><div className="order-summary"><p><span>Seller target</span><strong>{formatNaira(Number(order.seller_target_kobo))}</strong></p><p><span>Reward funding</span><strong>{formatNaira(Number(order.reward_funding_kobo))}</strong></p><p><span>Estimated processing</span><strong>{formatNaira(Number(order.paystack_fee_estimate_kobo))}</strong></p></div></section></div></>}
+import { notFound } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { formatNaira } from "@/lib/money";
+import { StatusForm } from "@/components/seller/status-form";
+import { BalanceLinkButton } from "@/components/seller/balance-link-button";
+import { Copy, MessageCircle } from "lucide-react";
+interface Row {
+  id: string;
+  public_reference: string;
+  status: string;
+  total_due_kobo: number;
+  total_paid_kobo: number;
+  seller_target_kobo: number;
+  reward_funding_kobo: number;
+  paystack_fee_estimate_kobo: number;
+  fulfilment_method: string;
+  customer:
+    | { full_name: string; normalized_phone: string }
+    | { full_name: string; normalized_phone: string }[];
+  items: {
+    product_name_snapshot: string;
+    variant_snapshot: Record<string, string>;
+    quantity: number;
+  }[];
+}
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params,
+    db = await createClient(),
+    { data } = await db
+      .from("orders")
+      .select(
+        "id,public_reference,status,total_due_kobo,total_paid_kobo,seller_target_kobo,reward_funding_kobo,paystack_fee_estimate_kobo,fulfilment_method,customer:customers(full_name,normalized_phone),items:order_items(product_name_snapshot,variant_snapshot,quantity)",
+      )
+      .eq("id", id)
+      .single();
+  if (!data) notFound();
+  const order = data as unknown as Row,
+    buyer = Array.isArray(order.customer) ? order.customer[0] : order.customer,
+    item = order.items[0],
+    outstanding = Math.max(
+      0,
+      Number(order.total_due_kobo) - Number(order.total_paid_kobo),
+    );
+  return (
+    <>
+      <header className="app-topbar">
+        <div>
+          <h1>Order {order.public_reference}</h1>
+          <p>
+            {item?.product_name_snapshot} ·{" "}
+            {order.fulfilment_method.replaceAll("_", " ")}
+          </p>
+        </div>
+        <span className="badge">{order.status.replaceAll("_", " ")}</span>
+      </header>
+      <div className="settings-grid">
+        <section className="panel">
+          <h2>Fulfilment status</h2>
+          <StatusForm
+            resource="orders"
+            id={order.id}
+            current={order.status}
+            options={[
+              "confirmed",
+              "processing",
+              "awaiting_stock",
+              "ready_for_pickup",
+              "out_for_delivery",
+              "delivered",
+              "picked_up",
+              "refund_pending",
+            ]}
+          />
+          <div className="order-summary">
+            <p>
+              <span>
+                {item?.product_name_snapshot} × {item?.quantity}
+              </span>
+              <strong>{formatNaira(Number(order.total_due_kobo))}</strong>
+            </p>
+            <p>
+              <span>Paid</span>
+              <strong>{formatNaira(Number(order.total_paid_kobo))}</strong>
+            </p>
+            <p className="total">
+              <span>Outstanding</span>
+              <strong>{formatNaira(outstanding)}</strong>
+            </p>
+          </div>
+          {outstanding > 0 && <BalanceLinkButton orderId={order.id} />}
+        </section>
+        <section className="panel">
+          <h2>Buyer and follow-up</h2>
+          <p>
+            <strong>{buyer?.full_name}</strong>
+            <br />+{buyer?.normalized_phone}
+          </p>
+          <a
+            className="button button-small"
+            href={`https://wa.me/${buyer?.normalized_phone}?text=${encodeURIComponent(`Hello ${buyer?.full_name}, here is an update on order ${order.public_reference}.`)}`}
+          >
+            <MessageCircle size={16} /> Open WhatsApp
+          </a>
+          <button className="button button-small button-secondary">
+            <Copy size={16} /> Copy order reference
+          </button>
+          <h2 style={{ marginTop: 28 }}>Financial snapshot</h2>
+          <div className="order-summary">
+            <p>
+              <span>Seller target</span>
+              <strong>{formatNaira(Number(order.seller_target_kobo))}</strong>
+            </p>
+            <p>
+              <span>Reward funding</span>
+              <strong>{formatNaira(Number(order.reward_funding_kobo))}</strong>
+            </p>
+            <p>
+              <span>Estimated processing</span>
+              <strong>
+                {formatNaira(Number(order.paystack_fee_estimate_kobo))}
+              </strong>
+            </p>
+          </div>
+        </section>
+      </div>
+    </>
+  );
+}

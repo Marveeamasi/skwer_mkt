@@ -1,3 +1,9 @@
 /* Keep vertical page scrolling native while reserving deliberate horizontal releases for theme changes. */
-body{touch-action:pan-y pinch-zoom}
-.table-wrap,.option-row,[data-horizontal-scroll]{touch-action:auto}
+body {
+  touch-action: pan-y pinch-zoom;
+}
+.table-wrap,
+.option-row,
+[data-horizontal-scroll] {
+  touch-action: auto;
+}

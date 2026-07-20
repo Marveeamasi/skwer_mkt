@@ -1,1 +1,23 @@
-import {PolicyPage} from "@/components/marketing/policy-page";export default function Page(){return <PolicyPage title="Seller terms" summary="Sellers must trade lawfully, describe products honestly and fulfil confirmed orders." sections={[{title:"Seller responsibilities",body:"Maintain accurate stock, options, prices, policies, contact and settlement information. Use customer photographs only with permission and never claim false verification or demand card details."},{title:"Pricing and settlement",body:"The seller chooses a minimum take-home and optional buyer reward. The platform calculates the inclusive buyer price. Settlement depends on verified payment configuration and provider rules."},{title:"Records and customer data",body:"Customer information may be used only for the related seller relationship and lawful fulfilment or opted-in communication. It may not be sold or used for unrelated cross-seller marketing."}]}/>}
+import { PolicyPage } from "@/components/marketing/policy-page";
+export default function Page() {
+  return (
+    <PolicyPage
+      title="Seller terms"
+      summary="Sellers must trade lawfully, describe products honestly and fulfil confirmed orders."
+      sections={[
+        {
+          title: "Seller responsibilities",
+          body: "Maintain accurate stock, options, prices, policies, contact and settlement information. Use customer photographs only with permission and never claim false verification or demand card details.",
+        },
+        {
+          title: "Pricing and settlement",
+          body: "The seller chooses a minimum take-home and optional buyer reward. The platform calculates the inclusive buyer price. Settlement depends on verified payment configuration and provider rules.",
+        },
+        {
+          title: "Records and customer data",
+          body: "Customer information may be used only for the related seller relationship and lawful fulfilment or opted-in communication. It may not be sold or used for unrelated cross-seller marketing.",
+        },
+      ]}
+    />
+  );
+}

@@ -1,6 +1,102 @@
-import "server-only";import {z} from "zod";const initialized=z.object({status:z.boolean(),message:z.string(),data:z.object({authorization_url:z.url(),access_code:z.string(),reference:z.string()})});const verified=z.object({status:z.boolean(),data:z.object({status:z.string(),reference:z.string(),amount:z.number().int(),currency:z.string(),id:z.number(),channel:z.string().nullable(),paid_at:z.string().nullable()})});
-async function call(path:string,init?:RequestInit){const key=process.env.PAYSTACK_SECRET_KEY;if(!key)throw new Error("Paystack test key is not configured");const response=await fetch(`https://api.paystack.co${path}`,{...init,headers:{authorization:`Bearer ${key}`,"content-type":"application/json",...init?.headers},cache:"no-store",signal:AbortSignal.timeout(15000)});const body=await response.json();if(!response.ok)throw new Error(body.message??"Paystack request failed");return body}
-export async function initializePaystack(input:{email:string;amount:number;reference:string;callbackUrl:string;subaccount?:string;transactionCharge?:number;metadata:Record<string,unknown>}){return initialized.parse(await call("/transaction/initialize",{method:"POST",body:JSON.stringify({email:input.email,amount:input.amount,reference:input.reference,callback_url:input.callbackUrl,subaccount:input.subaccount,transaction_charge:input.transactionCharge,bearer:input.subaccount?"account":undefined,channels:["card","bank","bank_transfer","ussd"],metadata:input.metadata})}))}
-export async function verifyPaystack(reference:string){return verified.parse(await call(`/transaction/verify/${encodeURIComponent(reference)}`))}
-const refundCreated=z.object({status:z.boolean(),message:z.string(),data:z.object({id:z.union([z.number(),z.string()]),amount:z.number().int(),currency:z.string(),status:z.string()}).passthrough()});
-export async function createPaystackRefund(input:{transaction:string;amount:number;customerNote:string;merchantNote:string}){return refundCreated.parse(await call("/refund",{method:"POST",body:JSON.stringify({transaction:input.transaction,amount:input.amount,currency:"NGN",customer_note:input.customerNote,merchant_note:input.merchantNote})}))}
+import "server-only";
+import { z } from "zod";
+const initialized = z.object({
+  status: z.boolean(),
+  message: z.string(),
+  data: z.object({
+    authorization_url: z.url(),
+    access_code: z.string(),
+    reference: z.string(),
+  }),
+});
+const verified = z.object({
+  status: z.boolean(),
+  data: z.object({
+    status: z.string(),
+    reference: z.string(),
+    amount: z.number().int(),
+    currency: z.string(),
+    id: z.number(),
+    channel: z.string().nullable(),
+    paid_at: z.string().nullable(),
+  }),
+});
+async function call(path: string, init?: RequestInit) {
+  const key = process.env.PAYSTACK_SECRET_KEY;
+  if (!key) throw new Error("Paystack test key is not configured");
+  const response = await fetch(`https://api.paystack.co${path}`, {
+    ...init,
+    headers: {
+      authorization: `Bearer ${key}`,
+      "content-type": "application/json",
+      ...init?.headers,
+    },
+    cache: "no-store",
+    signal: AbortSignal.timeout(15000),
+  });
+  const body = await response.json();
+  if (!response.ok) throw new Error(body.message ?? "Paystack request failed");
+  return body;
+}
+export async function initializePaystack(input: {
+  email: string;
+  amount: number;
+  reference: string;
+  callbackUrl: string;
+  subaccount?: string;
+  transactionCharge?: number;
+  metadata: Record<string, unknown>;
+}) {
+  return initialized.parse(
+    await call("/transaction/initialize", {
+      method: "POST",
+      body: JSON.stringify({
+        email: input.email,
+        amount: input.amount,
+        reference: input.reference,
+        callback_url: input.callbackUrl,
+        subaccount: input.subaccount,
+        transaction_charge: input.transactionCharge,
+        bearer: input.subaccount ? "account" : undefined,
+        channels: ["card", "bank", "bank_transfer", "ussd"],
+        metadata: input.metadata,
+      }),
+    }),
+  );
+}
+export async function verifyPaystack(reference: string) {
+  return verified.parse(
+    await call(`/transaction/verify/${encodeURIComponent(reference)}`),
+  );
+}
+const refundCreated = z.object({
+  status: z.boolean(),
+  message: z.string(),
+  data: z
+    .object({
+      id: z.union([z.number(), z.string()]),
+      amount: z.number().int(),
+      currency: z.string(),
+      status: z.string(),
+    })
+    .passthrough(),
+});
+export async function createPaystackRefund(input: {
+  transaction: string;
+  amount: number;
+  customerNote: string;
+  merchantNote: string;
+}) {
+  return refundCreated.parse(
+    await call("/refund", {
+      method: "POST",
+      body: JSON.stringify({
+        transaction: input.transaction,
+        amount: input.amount,
+        currency: "NGN",
+        customer_note: input.customerNote,
+        merchant_note: input.merchantNote,
+      }),
+    }),
+  );
+}

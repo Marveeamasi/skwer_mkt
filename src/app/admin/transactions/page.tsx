@@ -1,1 +1,14 @@
-import {ResourcePage} from "@/components/admin/resource-page";export default function Page(){return <ResourcePage title="Transactions" description="Compare expected values with verified Paystack results." columns={["Reference","Expected","Verified","Webhook","Status"]} rows={[["PAY-A81K2","₦10,800","₦10,800","Processed","Success"],["PAY-B19X4","₦6,500","—","Received","Pending"]]}/>}
+import { ResourcePage } from "@/components/admin/resource-page";
+export default function Page() {
+  return (
+    <ResourcePage
+      title="Transactions"
+      description="Compare expected values with verified Paystack results."
+      columns={["Reference", "Expected", "Verified", "Webhook", "Status"]}
+      rows={[
+        ["PAY-A81K2", "₦10,800", "₦10,800", "Processed", "Success"],
+        ["PAY-B19X4", "₦6,500", "—", "Received", "Pending"],
+      ]}
+    />
+  );
+}

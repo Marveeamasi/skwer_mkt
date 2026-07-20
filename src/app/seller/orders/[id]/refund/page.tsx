@@ -1,6 +1,75 @@
-import {notFound} from "next/navigation";
+import { notFound } from "next/navigation";
 import Link from "next/link";
-import {createClient} from "@/lib/supabase/server";
-import {formatNaira} from "@/lib/money";
-import {RefundRequestForm} from "@/components/seller/refund-request-form";
-export default async function Page({params}:{params:Promise<{id:string}>}){const{id}=await params,db=await createClient(),{data:order}=await db.from("orders").select("id,public_reference,status,total_paid_kobo,total_due_kobo,refunds:refund_records(id,status,amount_kobo,reason,created_at)").eq("id",id).single();if(!order)notFound();return <><header className="app-topbar"><div><h1>Refund {order.public_reference}</h1><p>Request only an amount the buyer actually paid.</p></div><Link className="button button-small button-secondary" href={`/seller/orders/${id}`}>Back to order</Link></header><section className="panel"><div className="order-summary"><p><span>Order total</span><strong>{formatNaira(Number(order.total_due_kobo))}</strong></p><p><span>Amount paid</span><strong>{formatNaira(Number(order.total_paid_kobo))}</strong></p><p><span>Current status</span><strong>{order.status.replaceAll("_"," ")}</strong></p></div>{order.refunds?.length?<div className="notice"><strong>An existing refund is being tracked.</strong><br/>{order.refunds.map(refund=>`${formatNaira(Number(refund.amount_kobo))} · ${refund.status}`).join(", ")}</div>:<RefundRequestForm orderId={id} maxKobo={Number(order.total_paid_kobo)}/>}<p className="notice">Submitting creates an auditable request. An administrator must approve and send it to Paystack; the order changes to refunded only after Paystack confirms processing.</p></section></>}
+import { createClient } from "@/lib/supabase/server";
+import { formatNaira } from "@/lib/money";
+import { RefundRequestForm } from "@/components/seller/refund-request-form";
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params,
+    db = await createClient(),
+    { data: order } = await db
+      .from("orders")
+      .select(
+        "id,public_reference,status,total_paid_kobo,total_due_kobo,refunds:refund_records(id,status,amount_kobo,reason,created_at)",
+      )
+      .eq("id", id)
+      .single();
+  if (!order) notFound();
+  return (
+    <>
+      <header className="app-topbar">
+        <div>
+          <h1>Refund {order.public_reference}</h1>
+          <p>Request only an amount the buyer actually paid.</p>
+        </div>
+        <Link
+          className="button button-small button-secondary"
+          href={`/seller/orders/${id}`}
+        >
+          Back to order
+        </Link>
+      </header>
+      <section className="panel">
+        <div className="order-summary">
+          <p>
+            <span>Order total</span>
+            <strong>{formatNaira(Number(order.total_due_kobo))}</strong>
+          </p>
+          <p>
+            <span>Amount paid</span>
+            <strong>{formatNaira(Number(order.total_paid_kobo))}</strong>
+          </p>
+          <p>
+            <span>Current status</span>
+            <strong>{order.status.replaceAll("_", " ")}</strong>
+          </p>
+        </div>
+        {order.refunds?.length ? (
+          <div className="notice">
+            <strong>An existing refund is being tracked.</strong>
+            <br />
+            {order.refunds
+              .map(
+                (refund) =>
+                  `${formatNaira(Number(refund.amount_kobo))} · ${refund.status}`,
+              )
+              .join(", ")}
+          </div>
+        ) : (
+          <RefundRequestForm
+            orderId={id}
+            maxKobo={Number(order.total_paid_kobo)}
+          />
+        )}
+        <p className="notice">
+          Submitting creates an auditable request. An administrator must approve
+          and send it to Paystack; the order changes to refunded only after
+          Paystack confirms processing.
+        </p>
+      </section>
+    </>
+  );
+}

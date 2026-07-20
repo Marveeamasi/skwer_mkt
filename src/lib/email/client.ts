@@ -1,15 +1,132 @@
 import "server-only";
-import {z} from "zod";
-const email=z.object({to:z.email(),subject:z.string().min(1).max(160),html:z.string().min(1),text:z.string().optional()});
-type Payload=z.infer<typeof email>;
-type Provider="emailjs"|"vercel";
+import { z } from "zod";
+const email = z.object({
+  to: z.email(),
+  subject: z.string().min(1).max(160),
+  html: z.string().min(1),
+  text: z.string().optional(),
+});
+type Payload = z.infer<typeof email>;
+type Provider = "emailjs" | "vercel";
 
-async function sendVercel(payload:Payload){const url=process.env.EMAIL_SERVICE_URL,secret=process.env.EMAIL_SERVICE_SECRET;if(!url||!secret)throw new EmailDeliveryError("Vercel email service is not configured","vercel");const configured=new URL(url);if(configured.pathname==="/"||configured.pathname==="")configured.pathname="/api/send";const response=await fetch(configured,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({...payload,secret}),signal:AbortSignal.timeout(15_000)});if(!response.ok){const provider=await response.json().catch(()=>null) as {error?:string}|null;throw new EmailDeliveryError(provider?.error??`Vercel email service returned ${response.status}`,"vercel",response.status)}}
+async function sendVercel(payload: Payload) {
+  const url = process.env.EMAIL_SERVICE_URL,
+    secret = process.env.EMAIL_SERVICE_SECRET;
+  if (!url || !secret)
+    throw new EmailDeliveryError(
+      "Vercel email service is not configured",
+      "vercel",
+    );
+  const configured = new URL(url);
+  if (configured.pathname === "/" || configured.pathname === "")
+    configured.pathname = "/api/send";
+  const response = await fetch(configured, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ ...payload, secret }),
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!response.ok) {
+    const provider = (await response.json().catch(() => null)) as {
+      error?: string;
+    } | null;
+    throw new EmailDeliveryError(
+      provider?.error ?? `Vercel email service returned ${response.status}`,
+      "vercel",
+      response.status,
+    );
+  }
+}
 
-async function sendEmailJs(payload:Payload){const serviceId=process.env.EMAILJS_SERVICE_ID,templateId=process.env.EMAILJS_TEMPLATE_ID,publicKey=process.env.EMAILJS_PUBLIC_KEY,privateKey=process.env.EMAILJS_PRIVATE_KEY;if(!serviceId||!templateId||!publicKey)throw new EmailDeliveryError("EmailJS is not configured","emailjs");const request:{service_id:string;template_id:string;user_id:string;accessToken?:string;template_params:Record<string,string>}={service_id:serviceId,template_id:templateId,user_id:publicKey,template_params:{to:payload.to,to_email:payload.to,subject:payload.subject,text:payload.text??payload.html,from_name:process.env.EMAIL_FROM_NAME?.trim()||"SKWER MKT",reply_to:process.env.EMAIL_REPLY_TO?.trim()||process.env.NEXT_PUBLIC_SUPPORT_EMAIL?.trim()||"support@skwermkt.com"}};if(privateKey)request.accessToken=privateKey;const response=await fetch("https://api.emailjs.com/api/v1.0/email/send",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(request),signal:AbortSignal.timeout(15_000)});if(!response.ok)throw new EmailDeliveryError((await response.text().catch(()=>""))||`EmailJS returned ${response.status}`,"emailjs",response.status)}
+async function sendEmailJs(payload: Payload) {
+  const serviceId = process.env.EMAILJS_SERVICE_ID,
+    templateId = process.env.EMAILJS_TEMPLATE_ID,
+    publicKey = process.env.EMAILJS_PUBLIC_KEY,
+    privateKey = process.env.EMAILJS_PRIVATE_KEY;
+  if (!serviceId || !templateId || !publicKey)
+    throw new EmailDeliveryError("EmailJS is not configured", "emailjs");
+  const request: {
+    service_id: string;
+    template_id: string;
+    user_id: string;
+    accessToken?: string;
+    template_params: Record<string, string>;
+  } = {
+    service_id: serviceId,
+    template_id: templateId,
+    user_id: publicKey,
+    template_params: {
+      to: payload.to,
+      to_email: payload.to,
+      subject: payload.subject,
+      text: payload.text ?? payload.html,
+      from_name: process.env.EMAIL_FROM_NAME?.trim() || "SKWER MKT",
+      reply_to:
+        process.env.EMAIL_REPLY_TO?.trim() ||
+        process.env.NEXT_PUBLIC_SUPPORT_EMAIL?.trim() ||
+        "support@skwermkt.com",
+    },
+  };
+  if (privateKey) request.accessToken = privateKey;
+  const response = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(request),
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!response.ok)
+    throw new EmailDeliveryError(
+      (await response.text().catch(() => "")) ||
+        `EmailJS returned ${response.status}`,
+      "emailjs",
+      response.status,
+    );
+}
 
-async function deliver(provider:Provider,payload:Payload){if(provider==="emailjs")return sendEmailJs(payload);return sendVercel(payload)}
+async function deliver(provider: Provider, payload: Payload) {
+  if (provider === "emailjs") return sendEmailJs(payload);
+  return sendVercel(payload);
+}
 
-export async function sendTransactionalEmail(input:z.input<typeof email>):Promise<{provider:Provider;fallbackUsed:boolean}>{const payload=email.parse(input),configured=process.env.EMAIL_PROVIDER?.toLowerCase(),primary:Provider=configured==="vercel"?"vercel":"emailjs",fallback:Provider=primary==="emailjs"?"vercel":"emailjs";try{await deliver(primary,payload);return{provider:primary,fallbackUsed:false}}catch(primaryError){console.error("email-primary-failed",{provider:primary,message:primaryError instanceof Error?primaryError.message:"unknown"});try{await deliver(fallback,payload);return{provider:fallback,fallbackUsed:true}}catch(fallbackError){console.error("email-fallback-failed",{provider:fallback,message:fallbackError instanceof Error?fallbackError.message:"unknown"});throw new EmailDeliveryError("All configured email providers failed","all")}}}
+export async function sendTransactionalEmail(
+  input: z.input<typeof email>,
+): Promise<{ provider: Provider; fallbackUsed: boolean }> {
+  const payload = email.parse(input),
+    configured = process.env.EMAIL_PROVIDER?.toLowerCase(),
+    primary: Provider = configured === "vercel" ? "vercel" : "emailjs",
+    fallback: Provider = primary === "emailjs" ? "vercel" : "emailjs";
+  try {
+    await deliver(primary, payload);
+    return { provider: primary, fallbackUsed: false };
+  } catch (primaryError) {
+    console.error("email-primary-failed", {
+      provider: primary,
+      message: primaryError instanceof Error ? primaryError.message : "unknown",
+    });
+    try {
+      await deliver(fallback, payload);
+      return { provider: fallback, fallbackUsed: true };
+    } catch (fallbackError) {
+      console.error("email-fallback-failed", {
+        provider: fallback,
+        message:
+          fallbackError instanceof Error ? fallbackError.message : "unknown",
+      });
+      throw new EmailDeliveryError(
+        "All configured email providers failed",
+        "all",
+      );
+    }
+  }
+}
 
-export class EmailDeliveryError extends Error{constructor(message:string,public readonly provider:Provider|"all",public readonly providerStatus?:number){super(message);this.name="EmailDeliveryError"}}
+export class EmailDeliveryError extends Error {
+  constructor(
+    message: string,
+    public readonly provider: Provider | "all",
+    public readonly providerStatus?: number,
+  ) {
+    super(message);
+    this.name = "EmailDeliveryError";
+  }
+}

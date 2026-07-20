@@ -1,8 +1,116 @@
-import {NextResponse} from "next/server";
-import {z,ZodError} from "zod";
-import {createAdminClient} from "@/lib/supabase/admin";
-import {otpMatches} from "@/lib/security/otp";
-import {enforceRateLimit,RateLimitError} from "@/lib/security/rate-limit";
-import {requestIdentifier} from "@/lib/security/request";
-const schema=z.object({email:z.email().max(254),password:z.string().min(8).max(72),fullName:z.string().trim().min(2).max(80),code:z.string().regex(/^\d{6}$/)});
-export async function POST(request:Request){let claimedOtpId:string|undefined,createdUserId:string|undefined;const db=createAdminClient();try{const input=schema.parse(await request.json()),email=input.email.trim().toLowerCase(),secret=process.env.ORDER_TOKEN_SECRET;if(!secret)throw new Error("OTP secret missing");await enforceRateLimit({scope:"signup-register",identifier:`${requestIdentifier(request)}:${email}`,limit:8,windowSeconds:900});const{data:active}=await db.from("email_verification_otps").select("*").eq("email",email).eq("purpose","seller_signup").is("consumed_at",null).gt("expires_at",new Date().toISOString()).order("created_at",{ascending:false}).limit(5);const otp=active?.find(candidate=>candidate.attempts<5&&otpMatches(email,input.code,secret,candidate.code_hash));if(!otp){for(const candidate of active??[])await db.from("email_verification_otps").update({attempts:candidate.attempts+1}).eq("id",candidate.id).is("consumed_at",null);return NextResponse.json({error:"That code is invalid or expired."},{status:400})}const{data:claimed}=await db.from("email_verification_otps").update({consumed_at:new Date().toISOString()}).eq("id",otp.id).is("consumed_at",null).select("id").maybeSingle();if(!claimed)return NextResponse.json({error:"That code has already been used."},{status:409});claimedOtpId=claimed.id;const{data,error}=await db.auth.admin.createUser({email,password:input.password,email_confirm:true,user_metadata:{full_name:input.fullName}});if(error)throw error;createdUserId=data.user.id;const{error:profileError}=await db.from("profiles").upsert({id:data.user.id,full_name:input.fullName,role:"seller"});if(profileError)throw profileError;await db.from("email_verification_otps").update({consumed_at:new Date().toISOString()}).eq("email",email).eq("purpose","seller_signup").is("consumed_at",null);return NextResponse.json({ok:true})}catch(error){console.error("register",{name:error instanceof Error?error.name:"unknown",message:error instanceof Error?error.message:"unknown",rolledBackUser:!!createdUserId});if(createdUserId)await db.auth.admin.deleteUser(createdUserId).catch(()=>undefined);if(claimedOtpId)await db.from("email_verification_otps").update({consumed_at:null}).eq("id",claimedOtpId);if(error instanceof RateLimitError)return NextResponse.json({error:error.message},{status:429});if(error instanceof ZodError)return NextResponse.json({error:"Check your name, email, password and six-digit code."},{status:400});const message=error instanceof Error?error.message.toLowerCase():"";if(message.includes("already")||message.includes("registered"))return NextResponse.json({error:"An account already exists for this email. Sign in instead."},{status:409});return NextResponse.json({error:"We could not create this account. Please try again."},{status:500})}}
+import { NextResponse } from "next/server";
+import { z, ZodError } from "zod";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { otpMatches } from "@/lib/security/otp";
+import { enforceRateLimit, RateLimitError } from "@/lib/security/rate-limit";
+import { requestIdentifier } from "@/lib/security/request";
+const schema = z.object({
+  email: z.email().max(254),
+  password: z.string().min(8).max(72),
+  fullName: z.string().trim().min(2).max(80),
+  code: z.string().regex(/^\d{6}$/),
+});
+export async function POST(request: Request) {
+  let claimedOtpId: string | undefined, createdUserId: string | undefined;
+  const db = createAdminClient();
+  try {
+    const input = schema.parse(await request.json()),
+      email = input.email.trim().toLowerCase(),
+      secret = process.env.ORDER_TOKEN_SECRET;
+    if (!secret) throw new Error("OTP secret missing");
+    await enforceRateLimit({
+      scope: "signup-register",
+      identifier: `${requestIdentifier(request)}:${email}`,
+      limit: 8,
+      windowSeconds: 900,
+    });
+    const { data: active } = await db
+      .from("email_verification_otps")
+      .select("*")
+      .eq("email", email)
+      .eq("purpose", "seller_signup")
+      .is("consumed_at", null)
+      .gt("expires_at", new Date().toISOString())
+      .order("created_at", { ascending: false })
+      .limit(5);
+    const otp = active?.find(
+      (candidate) =>
+        candidate.attempts < 5 &&
+        otpMatches(email, input.code, secret, candidate.code_hash),
+    );
+    if (!otp) {
+      for (const candidate of active ?? [])
+        await db
+          .from("email_verification_otps")
+          .update({ attempts: candidate.attempts + 1 })
+          .eq("id", candidate.id)
+          .is("consumed_at", null);
+      return NextResponse.json(
+        { error: "That code is invalid or expired." },
+        { status: 400 },
+      );
+    }
+    const { data: claimed } = await db
+      .from("email_verification_otps")
+      .update({ consumed_at: new Date().toISOString() })
+      .eq("id", otp.id)
+      .is("consumed_at", null)
+      .select("id")
+      .maybeSingle();
+    if (!claimed)
+      return NextResponse.json(
+        { error: "That code has already been used." },
+        { status: 409 },
+      );
+    claimedOtpId = claimed.id;
+    const { data, error } = await db.auth.admin.createUser({
+      email,
+      password: input.password,
+      email_confirm: true,
+      user_metadata: { full_name: input.fullName },
+    });
+    if (error) throw error;
+    createdUserId = data.user.id;
+    const { error: profileError } = await db
+      .from("profiles")
+      .upsert({ id: data.user.id, full_name: input.fullName, role: "seller" });
+    if (profileError) throw profileError;
+    await db
+      .from("email_verification_otps")
+      .update({ consumed_at: new Date().toISOString() })
+      .eq("email", email)
+      .eq("purpose", "seller_signup")
+      .is("consumed_at", null);
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("register", {
+      name: error instanceof Error ? error.name : "unknown",
+      message: error instanceof Error ? error.message : "unknown",
+      rolledBackUser: !!createdUserId,
+    });
+    if (createdUserId)
+      await db.auth.admin.deleteUser(createdUserId).catch(() => undefined);
+    if (claimedOtpId)
+      await db
+        .from("email_verification_otps")
+        .update({ consumed_at: null })
+        .eq("id", claimedOtpId);
+    if (error instanceof RateLimitError)
+      return NextResponse.json({ error: error.message }, { status: 429 });
+    if (error instanceof ZodError)
+      return NextResponse.json(
+        { error: "Check your name, email, password and six-digit code." },
+        { status: 400 },
+      );
+    const message = error instanceof Error ? error.message.toLowerCase() : "";
+    if (message.includes("already") || message.includes("registered"))
+      return NextResponse.json(
+        { error: "An account already exists for this email. Sign in instead." },
+        { status: 409 },
+      );
+    return NextResponse.json(
+      { error: "We could not create this account. Please try again." },
+      { status: 500 },
+    );
+  }
+}

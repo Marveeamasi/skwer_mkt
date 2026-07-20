@@ -1,1 +1,53 @@
-import {NextResponse} from "next/server";import {z} from "zod";import {verifyPaystack} from "@/lib/paystack/client";import {createAdminClient} from "@/lib/supabase/admin";import {processGrowthAfterFullPayment} from "@/server/growth";const schema=z.object({reference:z.string().min(5).max(100)});export async function POST(request:Request){try{const {reference}=schema.parse(await request.json());if(reference.startsWith("DEMO-")&&process.env.NODE_ENV!=="production")return NextResponse.json({verified:true,demo:true});const db=createAdminClient(),provider=await verifyPaystack(reference),{data:payment}=await db.from("payments").select("*").eq("provider_reference",reference).single();if(!payment)throw new Error("Payment record not found");if(provider.data.status!=="success"||provider.data.amount!==Number(payment.amount_kobo)||provider.data.currency!==payment.currency)throw new Error("Payment verification did not match this order");const {data:orderId,error}=await db.rpc("convert_payment_success",{p_reference:reference,p_provider_id:String(provider.data.id),p_channel:provider.data.channel??"unknown",p_paid_at:provider.data.paid_at??new Date().toISOString(),p_summary:{id:provider.data.id,status:provider.data.status,amount:provider.data.amount,currency:provider.data.currency,channel:provider.data.channel}});if(error)throw error;await processGrowthAfterFullPayment(String(orderId));return NextResponse.json({verified:true})}catch(error){console.error("payment-verify",error);return NextResponse.json({verified:false,error:"Payment is not verified yet. Refresh shortly or contact support."},{status:400})}}
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { verifyPaystack } from "@/lib/paystack/client";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { processGrowthAfterFullPayment } from "@/server/growth";
+const schema = z.object({ reference: z.string().min(5).max(100) });
+export async function POST(request: Request) {
+  try {
+    const { reference } = schema.parse(await request.json());
+    if (reference.startsWith("DEMO-") && process.env.NODE_ENV !== "production")
+      return NextResponse.json({ verified: true, demo: true });
+    const db = createAdminClient(),
+      provider = await verifyPaystack(reference),
+      { data: payment } = await db
+        .from("payments")
+        .select("*")
+        .eq("provider_reference", reference)
+        .single();
+    if (!payment) throw new Error("Payment record not found");
+    if (
+      provider.data.status !== "success" ||
+      provider.data.amount !== Number(payment.amount_kobo) ||
+      provider.data.currency !== payment.currency
+    )
+      throw new Error("Payment verification did not match this order");
+    const { data: orderId, error } = await db.rpc("convert_payment_success", {
+      p_reference: reference,
+      p_provider_id: String(provider.data.id),
+      p_channel: provider.data.channel ?? "unknown",
+      p_paid_at: provider.data.paid_at ?? new Date().toISOString(),
+      p_summary: {
+        id: provider.data.id,
+        status: provider.data.status,
+        amount: provider.data.amount,
+        currency: provider.data.currency,
+        channel: provider.data.channel,
+      },
+    });
+    if (error) throw error;
+    await processGrowthAfterFullPayment(String(orderId));
+    return NextResponse.json({ verified: true });
+  } catch (error) {
+    console.error("payment-verify", error);
+    return NextResponse.json(
+      {
+        verified: false,
+        error:
+          "Payment is not verified yet. Refresh shortly or contact support.",
+      },
+      { status: 400 },
+    );
+  }
+}

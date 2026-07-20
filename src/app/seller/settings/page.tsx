@@ -1,1 +1,54 @@
-export default function Page(){return <><header className="app-topbar"><div><h1>Business settings</h1><p>Keep buyer trust and settlement details accurate.</p></div></header><div className="settings-grid"><form className="panel form-stack"><h2>Business profile</h2><label>Business name<input defaultValue="Amara Beauty"/></label><label>WhatsApp phone<input defaultValue="08030000000"/></label><label>City<input defaultValue="Port Harcourt"/></label><label>Trust description<textarea defaultValue="Original beauty essentials with pickup in GRA."/></label><button className="button button-small">Save profile</button></form><form className="panel form-stack"><h2>Payment account</h2><div className="notice">Test mode. Live settlement remains disabled until the payment account and platform model are approved.</div><label>Bank<select><option>Select bank</option></select></label><label>Account number<input inputMode="numeric" maxLength={10}/></label><button className="button button-small">Submit for verification</button></form></div></>}
+export default function Page() {
+  return (
+    <>
+      <header className="app-topbar">
+        <div>
+          <h1>Business settings</h1>
+          <p>Keep buyer trust and settlement details accurate.</p>
+        </div>
+      </header>
+      <div className="settings-grid">
+        <form className="panel form-stack">
+          <h2>Business profile</h2>
+          <label>
+            Business name
+            <input defaultValue="Amara Beauty" />
+          </label>
+          <label>
+            WhatsApp phone
+            <input defaultValue="08030000000" />
+          </label>
+          <label>
+            City
+            <input defaultValue="Port Harcourt" />
+          </label>
+          <label>
+            Trust description
+            <textarea defaultValue="Original beauty essentials with pickup in GRA." />
+          </label>
+          <button className="button button-small">Save profile</button>
+        </form>
+        <form className="panel form-stack">
+          <h2>Payment account</h2>
+          <div className="notice">
+            Test mode. Live settlement remains disabled until the payment
+            account and platform model are approved.
+          </div>
+          <label>
+            Bank
+            <select>
+              <option>Select bank</option>
+            </select>
+          </label>
+          <label>
+            Account number
+            <input inputMode="numeric" maxLength={10} />
+          </label>
+          <button className="button button-small">
+            Submit for verification
+          </button>
+        </form>
+      </div>
+    </>
+  );
+}

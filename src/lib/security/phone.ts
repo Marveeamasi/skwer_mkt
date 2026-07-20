@@ -1,1 +1,6 @@
-export function normalizeNigerianPhone(input:string){const digits=input.replace(/\D/g,"");if(/^0[789][01]\d{8}$/.test(digits))return `234${digits.slice(1)}`;if(/^234[789][01]\d{8}$/.test(digits))return digits;throw new Error("Enter a valid Nigerian phone number")}
+export function normalizeNigerianPhone(input: string) {
+  const digits = input.replace(/\D/g, "");
+  if (/^0[789][01]\d{8}$/.test(digits)) return `234${digits.slice(1)}`;
+  if (/^234[789][01]\d{8}$/.test(digits)) return digits;
+  throw new Error("Enter a valid Nigerian phone number");
+}

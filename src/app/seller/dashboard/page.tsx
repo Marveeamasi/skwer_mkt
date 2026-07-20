@@ -1,5 +1,192 @@
 import Link from "next/link";
-import {AlertCircle,ArrowRight,PackagePlus,ShoppingBag,Users} from "lucide-react";
-import {formatNaira} from "@/lib/money";
-import {createClient} from "@/lib/supabase/server";
-export default async function Page(){const db=await createClient(),today=new Date();today.setHours(0,0,0,0);const [{data:business},{data:todayOrders},{data:pending},{data:restock},{data:campaigns}]=await Promise.all([db.from("seller_businesses").select("business_name").maybeSingle(),db.from("orders").select("total_paid_kobo,seller_target_kobo,referred_by_referral_id").gte("created_at",today.toISOString()).in("status",["paid","confirmed","processing","awaiting_stock","ready_for_pickup","out_for_delivery","delivered","picked_up"]),db.from("orders").select("id,status",{count:"exact"}).in("status",["paid","confirmed","processing","awaiting_stock","ready_for_pickup","out_for_delivery"]),db.from("restock_interests").select("id",{count:"exact"}).eq("status","waiting"),db.from("campaigns").select("short_code,product:products(name)").eq("status","active").limit(1)]),orders=todayOrders??[],gross=orders.reduce((sum,order)=>sum+Number(order.total_paid_kobo),0),proceeds=orders.reduce((sum,order)=>sum+Number(order.seller_target_kobo),0),referred=orders.filter(order=>order.referred_by_referral_id).length,name=business?.business_name?.split(" ")[0]??"Seller",campaign=campaigns?.[0],product=Array.isArray(campaign?.product)?campaign.product[0]:campaign?.product;return <><header className="app-topbar"><div><h1>Welcome, {name}</h1><p>Here is what needs your attention today.</p></div><Link className="button button-small" href="/seller/campaigns/new"><PackagePlus size={17}/> Create sales link</Link></header><section className="metric-grid"><article className="metric-card"><small>Today&apos;s paid sales</small><strong>{formatNaira(gross)}</strong><em>{orders.length} verified orders</em></article><article className="metric-card"><small>New referred buyers</small><strong>{referred}</strong><em>Paid today</em></article><article className="metric-card"><small>Expected proceeds</small><strong>{formatNaira(proceeds)}</strong><em>Before external costs</em></article><article className="metric-card"><small>Pending fulfilment</small><strong>{pending?.length??0}</strong><em>Needs attention</em></article></section><section className="dashboard-grid"><article className="panel"><h2>Orders requiring action</h2><div className="attention-list"><div className="attention"><span className="attention-icon"><AlertCircle size={19}/></span><div><strong>{pending?.filter(order=>order.status==="paid").length??0} paid orders need confirmation</strong><small>Confirm the item and fulfilment plan</small></div><Link href="/seller/orders">View <ArrowRight size={14}/></Link></div><div className="attention"><span className="attention-icon"><ShoppingBag size={19}/></span><div><strong>{pending?.filter(order=>["ready_for_pickup","out_for_delivery"].includes(order.status)).length??0} orders ready for buyer follow-up</strong><small>Send a clear pickup or delivery update</small></div><Link href="/seller/orders">Follow up</Link></div><div className="attention"><span className="attention-icon"><Users size={19}/></span><div><strong>{restock?.length??0} waiting restock requests</strong><small>Genuine buyer interest from your campaigns</small></div><Link href="/seller/campaigns">Review</Link></div></div></article><article className="panel"><h2>What to post next</h2>{campaign?<div className="empty-state"><PackagePlus size={34}/><h2>{product?.name??"Your active campaign"}</h2><p>Keep the link visible on WhatsApp Status so buyers can order without asking for instructions.</p><Link className="button button-small" href={`/p/${campaign.short_code}`}>Open sales link</Link></div>:<div className="empty-state"><PackagePlus size={34}/><h2>Create your first sales link</h2><p>Add one clear product, its availability and fulfilment details. The buyer page explains the rest.</p><Link className="button button-small" href="/seller/campaigns/new">Start campaign</Link></div>}</article></section></>}
+import {
+  AlertCircle,
+  ArrowRight,
+  PackagePlus,
+  ShoppingBag,
+  Users,
+} from "lucide-react";
+import { formatNaira } from "@/lib/money";
+import { createClient } from "@/lib/supabase/server";
+export default async function Page() {
+  const db = await createClient(),
+    today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const [
+      { data: business },
+      { data: todayOrders },
+      { data: pending },
+      { data: restock },
+      { data: campaigns },
+    ] = await Promise.all([
+      db.from("seller_businesses").select("business_name").maybeSingle(),
+      db
+        .from("orders")
+        .select("total_paid_kobo,seller_target_kobo,referred_by_referral_id")
+        .gte("created_at", today.toISOString())
+        .in("status", [
+          "paid",
+          "confirmed",
+          "processing",
+          "awaiting_stock",
+          "ready_for_pickup",
+          "out_for_delivery",
+          "delivered",
+          "picked_up",
+        ]),
+      db
+        .from("orders")
+        .select("id,status", { count: "exact" })
+        .in("status", [
+          "paid",
+          "confirmed",
+          "processing",
+          "awaiting_stock",
+          "ready_for_pickup",
+          "out_for_delivery",
+        ]),
+      db
+        .from("restock_interests")
+        .select("id", { count: "exact" })
+        .eq("status", "waiting"),
+      db
+        .from("campaigns")
+        .select("short_code,product:products(name)")
+        .eq("status", "active")
+        .limit(1),
+    ]),
+    orders = todayOrders ?? [],
+    gross = orders.reduce(
+      (sum, order) => sum + Number(order.total_paid_kobo),
+      0,
+    ),
+    proceeds = orders.reduce(
+      (sum, order) => sum + Number(order.seller_target_kobo),
+      0,
+    ),
+    referred = orders.filter((order) => order.referred_by_referral_id).length,
+    name = business?.business_name?.split(" ")[0] ?? "Seller",
+    campaign = campaigns?.[0],
+    product = Array.isArray(campaign?.product)
+      ? campaign.product[0]
+      : campaign?.product;
+  return (
+    <>
+      <header className="app-topbar">
+        <div>
+          <h1>Welcome, {name}</h1>
+          <p>Here is what needs your attention today.</p>
+        </div>
+        <Link className="button button-small" href="/seller/campaigns/new">
+          <PackagePlus size={17} /> Create sales link
+        </Link>
+      </header>
+      <section className="metric-grid">
+        <article className="metric-card">
+          <small>Today&apos;s paid sales</small>
+          <strong>{formatNaira(gross)}</strong>
+          <em>{orders.length} verified orders</em>
+        </article>
+        <article className="metric-card">
+          <small>New referred buyers</small>
+          <strong>{referred}</strong>
+          <em>Paid today</em>
+        </article>
+        <article className="metric-card">
+          <small>Expected proceeds</small>
+          <strong>{formatNaira(proceeds)}</strong>
+          <em>Before external costs</em>
+        </article>
+        <article className="metric-card">
+          <small>Pending fulfilment</small>
+          <strong>{pending?.length ?? 0}</strong>
+          <em>Needs attention</em>
+        </article>
+      </section>
+      <section className="dashboard-grid">
+        <article className="panel">
+          <h2>Orders requiring action</h2>
+          <div className="attention-list">
+            <div className="attention">
+              <span className="attention-icon">
+                <AlertCircle size={19} />
+              </span>
+              <div>
+                <strong>
+                  {pending?.filter((order) => order.status === "paid").length ??
+                    0}{" "}
+                  paid orders need confirmation
+                </strong>
+                <small>Confirm the item and fulfilment plan</small>
+              </div>
+              <Link href="/seller/orders">
+                View <ArrowRight size={14} />
+              </Link>
+            </div>
+            <div className="attention">
+              <span className="attention-icon">
+                <ShoppingBag size={19} />
+              </span>
+              <div>
+                <strong>
+                  {pending?.filter((order) =>
+                    ["ready_for_pickup", "out_for_delivery"].includes(
+                      order.status,
+                    ),
+                  ).length ?? 0}{" "}
+                  orders ready for buyer follow-up
+                </strong>
+                <small>Send a clear pickup or delivery update</small>
+              </div>
+              <Link href="/seller/orders">Follow up</Link>
+            </div>
+            <div className="attention">
+              <span className="attention-icon">
+                <Users size={19} />
+              </span>
+              <div>
+                <strong>{restock?.length ?? 0} waiting restock requests</strong>
+                <small>Genuine buyer interest from your campaigns</small>
+              </div>
+              <Link href="/seller/campaigns">Review</Link>
+            </div>
+          </div>
+        </article>
+        <article className="panel">
+          <h2>What to post next</h2>
+          {campaign ? (
+            <div className="empty-state">
+              <PackagePlus size={34} />
+              <h2>{product?.name ?? "Your active campaign"}</h2>
+              <p>
+                Keep the link visible on WhatsApp Status so buyers can order
+                without asking for instructions.
+              </p>
+              <Link
+                className="button button-small"
+                href={`/p/${campaign.short_code}`}
+              >
+                Open sales link
+              </Link>
+            </div>
+          ) : (
+            <div className="empty-state">
+              <PackagePlus size={34} />
+              <h2>Create your first sales link</h2>
+              <p>
+                Add one clear product, its availability and fulfilment details.
+                The buyer page explains the rest.
+              </p>
+              <Link
+                className="button button-small"
+                href="/seller/campaigns/new"
+              >
+                Start campaign
+              </Link>
+            </div>
+          )}
+        </article>
+      </section>
+    </>
+  );
+}

@@ -1,3 +1,134 @@
-import {NextResponse} from "next/server";import {z} from "zod";import {nanoid} from "nanoid";import {createClient} from "@/lib/supabase/server";import {calculatePublicPrice,type FeeConfig} from "@/features/pricing/calculate-public-price";import {audit} from "@/server/audit";
-const schema=z.object({name:z.string().min(2).max(120),description:z.string().max(1200),category:z.string().min(2),stockMode:z.enum(["fixed","on_request","preorder"]),paymentMode:z.enum(["full","fixed_deposit","percentage_deposit"]),depositValue:z.number().int().positive().nullable(),sellerMinimumTakeHomeKobo:z.number().int().positive(),sellerPurchaseCostKobo:z.number().int().nonnegative().nullable(),referralRewardKobo:z.number().int().nonnegative(),reservationMinutes:z.number().int().min(5).max(10080),allowRestockInterest:z.boolean(),allowSubstitution:z.boolean(),variants:z.array(z.object({sku:z.string().max(80).optional(),option1Name:z.string().max(40),option1Value:z.string().max(80),option2Name:z.string().max(40).optional(),option2Value:z.string().max(80).optional(),availableQuantity:z.number().int().nonnegative().nullable()})).min(1).max(100)});
-export async function POST(request:Request){try{const input=schema.parse(await request.json()),db=await createClient(),{data:claims}=await db.auth.getClaims(),userId=claims?.claims?.sub;if(!userId)return NextResponse.json({error:"Sign in required"},{status:401});const {data:f,error:feeError}=await db.from("fee_configs").select("*").eq("is_active",true).eq("currency","NGN").lte("effective_from",new Date().toISOString()).order("effective_from",{ascending:false}).limit(1).single();if(feeError||!f)throw new Error("Active pricing configuration is unavailable");if(input.referralRewardKobo<Number(f.reward_min_kobo)||input.referralRewardKobo>Number(f.reward_max_kobo))throw new Error("Buyer reward is outside the allowed range");if(input.referralRewardKobo*10000>input.sellerMinimumTakeHomeKobo*Number(f.reward_max_percent_basis_points))throw new Error("Buyer reward is too high for this product");const config:FeeConfig={paystackPercentBasisPoints:f.paystack_percent_basis_points,paystackFixedKobo:Number(f.paystack_fixed_kobo),paystackFixedThresholdKobo:Number(f.paystack_fixed_threshold_kobo),paystackCapKobo:Number(f.paystack_cap_kobo),platformPercentBasisPoints:f.platform_percent_basis_points,platformFlatKobo:Number(f.platform_flat_kobo),platformMinKobo:Number(f.platform_min_kobo),platformMaxKobo:f.platform_max_kobo==null?null:Number(f.platform_max_kobo),safetyBufferKobo:Number(f.pricing_safety_buffer_kobo),roundingIncrementKobo:Number(f.rounding_increment_kobo)},pricing=calculatePublicPrice(input.sellerMinimumTakeHomeKobo,input.referralRewardKobo,config),shortCode=nanoid(10).toUpperCase();const {data:campaignId,error}=await db.rpc("create_campaign_atomic",{p_product:{name:input.name,description:input.description,category:input.category},p_campaign:{shortCode,stockMode:input.stockMode,paymentMode:input.paymentMode,depositValue:input.depositValue,sellerMinimumTakeHomeKobo:input.sellerMinimumTakeHomeKobo,sellerPurchaseCostKobo:input.sellerPurchaseCostKobo,referralRewardKobo:input.referralRewardKobo,publicPriceKobo:pricing.publicPriceKobo,reservationMinutes:input.reservationMinutes,allowRestockInterest:input.allowRestockInterest,allowSubstitution:input.allowSubstitution,chatFallbackEnabled:true,pricingSnapshot:{...pricing,feeConfigId:f.id}},p_variants:input.variants});if(error)throw error;await audit({actorId:userId,action:"campaign.created",resourceType:"campaign",resourceId:campaignId,after:{shortCode,publicPriceKobo:pricing.publicPriceKobo},request});return NextResponse.json({ok:true,campaignId,shortCode,publicPriceKobo:pricing.publicPriceKobo})}catch(error){console.error("campaign-create",error);return NextResponse.json({error:error instanceof Error?error.message:"Could not create campaign"},{status:400})}}
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { nanoid } from "nanoid";
+import { createClient } from "@/lib/supabase/server";
+import {
+  calculatePublicPrice,
+  type FeeConfig,
+} from "@/features/pricing/calculate-public-price";
+import { audit } from "@/server/audit";
+const schema = z.object({
+  name: z.string().min(2).max(120),
+  description: z.string().max(1200),
+  category: z.string().min(2),
+  stockMode: z.enum(["fixed", "on_request", "preorder"]),
+  paymentMode: z.enum(["full", "fixed_deposit", "percentage_deposit"]),
+  depositValue: z.number().int().positive().nullable(),
+  sellerMinimumTakeHomeKobo: z.number().int().positive(),
+  sellerPurchaseCostKobo: z.number().int().nonnegative().nullable(),
+  referralRewardKobo: z.number().int().nonnegative(),
+  reservationMinutes: z.number().int().min(5).max(10080),
+  allowRestockInterest: z.boolean(),
+  allowSubstitution: z.boolean(),
+  variants: z
+    .array(
+      z.object({
+        sku: z.string().max(80).optional(),
+        option1Name: z.string().max(40),
+        option1Value: z.string().max(80),
+        option2Name: z.string().max(40).optional(),
+        option2Value: z.string().max(80).optional(),
+        availableQuantity: z.number().int().nonnegative().nullable(),
+      }),
+    )
+    .min(1)
+    .max(100),
+});
+export async function POST(request: Request) {
+  try {
+    const input = schema.parse(await request.json()),
+      db = await createClient(),
+      { data: claims } = await db.auth.getClaims(),
+      userId = claims?.claims?.sub;
+    if (!userId)
+      return NextResponse.json({ error: "Sign in required" }, { status: 401 });
+    const { data: f, error: feeError } = await db
+      .from("fee_configs")
+      .select("*")
+      .eq("is_active", true)
+      .eq("currency", "NGN")
+      .lte("effective_from", new Date().toISOString())
+      .order("effective_from", { ascending: false })
+      .limit(1)
+      .single();
+    if (feeError || !f)
+      throw new Error("Active pricing configuration is unavailable");
+    if (
+      input.referralRewardKobo < Number(f.reward_min_kobo) ||
+      input.referralRewardKobo > Number(f.reward_max_kobo)
+    )
+      throw new Error("Buyer reward is outside the allowed range");
+    if (
+      input.referralRewardKobo * 10000 >
+      input.sellerMinimumTakeHomeKobo *
+        Number(f.reward_max_percent_basis_points)
+    )
+      throw new Error("Buyer reward is too high for this product");
+    const config: FeeConfig = {
+        paystackPercentBasisPoints: f.paystack_percent_basis_points,
+        paystackFixedKobo: Number(f.paystack_fixed_kobo),
+        paystackFixedThresholdKobo: Number(f.paystack_fixed_threshold_kobo),
+        paystackCapKobo: Number(f.paystack_cap_kobo),
+        platformPercentBasisPoints: f.platform_percent_basis_points,
+        platformFlatKobo: Number(f.platform_flat_kobo),
+        platformMinKobo: Number(f.platform_min_kobo),
+        platformMaxKobo:
+          f.platform_max_kobo == null ? null : Number(f.platform_max_kobo),
+        safetyBufferKobo: Number(f.pricing_safety_buffer_kobo),
+        roundingIncrementKobo: Number(f.rounding_increment_kobo),
+      },
+      pricing = calculatePublicPrice(
+        input.sellerMinimumTakeHomeKobo,
+        input.referralRewardKobo,
+        config,
+      ),
+      shortCode = nanoid(10).toUpperCase();
+    const { data: campaignId, error } = await db.rpc("create_campaign_atomic", {
+      p_product: {
+        name: input.name,
+        description: input.description,
+        category: input.category,
+      },
+      p_campaign: {
+        shortCode,
+        stockMode: input.stockMode,
+        paymentMode: input.paymentMode,
+        depositValue: input.depositValue,
+        sellerMinimumTakeHomeKobo: input.sellerMinimumTakeHomeKobo,
+        sellerPurchaseCostKobo: input.sellerPurchaseCostKobo,
+        referralRewardKobo: input.referralRewardKobo,
+        publicPriceKobo: pricing.publicPriceKobo,
+        reservationMinutes: input.reservationMinutes,
+        allowRestockInterest: input.allowRestockInterest,
+        allowSubstitution: input.allowSubstitution,
+        chatFallbackEnabled: true,
+        pricingSnapshot: { ...pricing, feeConfigId: f.id },
+      },
+      p_variants: input.variants,
+    });
+    if (error) throw error;
+    await audit({
+      actorId: userId,
+      action: "campaign.created",
+      resourceType: "campaign",
+      resourceId: campaignId,
+      after: { shortCode, publicPriceKobo: pricing.publicPriceKobo },
+      request,
+    });
+    return NextResponse.json({
+      ok: true,
+      campaignId,
+      shortCode,
+      publicPriceKobo: pricing.publicPriceKobo,
+    });
+  } catch (error) {
+    console.error("campaign-create", error);
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error ? error.message : "Could not create campaign",
+      },
+      { status: 400 },
+    );
+  }
+}

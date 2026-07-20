@@ -1,1 +1,17 @@
-import {createHmac,timingSafeEqual} from "node:crypto";export function signValue(value:string,secret:string){const sig=createHmac("sha256",secret).update(value).digest("base64url");return `${value}.${sig}`}export function verifySignedValue(input:string,secret:string){const i=input.lastIndexOf(".");if(i<1)return null;const value=input.slice(0,i),given=Buffer.from(input.slice(i+1)),expected=Buffer.from(createHmac("sha256",secret).update(value).digest("base64url"));return given.length===expected.length&&timingSafeEqual(given,expected)?value:null}
+import { createHmac, timingSafeEqual } from "node:crypto";
+export function signValue(value: string, secret: string) {
+  const sig = createHmac("sha256", secret).update(value).digest("base64url");
+  return `${value}.${sig}`;
+}
+export function verifySignedValue(input: string, secret: string) {
+  const i = input.lastIndexOf(".");
+  if (i < 1) return null;
+  const value = input.slice(0, i),
+    given = Buffer.from(input.slice(i + 1)),
+    expected = Buffer.from(
+      createHmac("sha256", secret).update(value).digest("base64url"),
+    );
+  return given.length === expected.length && timingSafeEqual(given, expected)
+    ? value
+    : null;
+}
