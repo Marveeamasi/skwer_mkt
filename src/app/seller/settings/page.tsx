@@ -1,53 +1,55 @@
-export default function Page() {
+import { createClient } from "@/lib/supabase/server";
+import { BusinessSettingsForm } from "@/components/seller/business-settings-form";
+
+export default async function Page() {
+  const db = await createClient();
+  const [{ data: business }, { data: payment }] = await Promise.all([
+    db
+      .from("seller_businesses")
+      .select("business_name,whatsapp_phone,city,state,short_description,pickup_note,delivery_note,return_policy")
+      .maybeSingle(),
+    db
+      .from("seller_payment_accounts")
+      .select("bank_code,account_number_last4,account_name,provider_verified,status")
+      .maybeSingle(),
+  ]);
   return (
     <>
       <header className="app-topbar">
         <div>
           <h1>Business settings</h1>
-          <p>Keep buyer trust and settlement details accurate.</p>
+          <p>Keep the information buyers rely on accurate.</p>
         </div>
       </header>
       <div className="settings-grid">
-        <form className="panel form-stack">
-          <h2>Business profile</h2>
-          <label>
-            Business name
-            <input defaultValue="Amara Beauty" />
-          </label>
-          <label>
-            WhatsApp phone
-            <input defaultValue="08030000000" />
-          </label>
-          <label>
-            City
-            <input defaultValue="Port Harcourt" />
-          </label>
-          <label>
-            Trust description
-            <textarea defaultValue="Original beauty essentials with pickup in GRA." />
-          </label>
-          <button className="button button-small">Save profile</button>
-        </form>
-        <form className="panel form-stack">
+        {business ? (
+          <BusinessSettingsForm business={business} />
+        ) : (
+          <section className="panel empty-state">
+            <h2>Complete business setup first</h2>
+            <p>Your public seller identity is created during onboarding.</p>
+            <a className="button button-small" href="/seller/onboarding">Start setup</a>
+          </section>
+        )}
+        <section className="panel form-stack">
           <h2>Payment account</h2>
-          <div className="notice">
-            Test mode. Live settlement remains disabled until the payment
-            account and platform model are approved.
-          </div>
-          <label>
-            Bank
-            <select>
-              <option>Select bank</option>
-            </select>
-          </label>
-          <label>
-            Account number
-            <input inputMode="numeric" maxLength={10} />
-          </label>
-          <button className="button button-small">
-            Submit for verification
-          </button>
-        </form>
+          {payment ? (
+            <>
+              <div className="notice">
+                {payment.provider_verified
+                  ? "Your Paystack settlement account is verified."
+                  : "Your payment account is awaiting verification. Live seller settlement remains disabled until approval."}
+              </div>
+              <p><strong>{payment.account_name || "Account name pending"}</strong></p>
+              <p>Account ending {payment.account_number_last4 || "—"}</p>
+              <p>Status: <span className="badge">{payment.status}</span></p>
+            </>
+          ) : (
+            <div className="notice">
+              Payment onboarding is not yet available in this build. Do not accept live buyer payments until SKWER confirms your settlement account.
+            </div>
+          )}
+        </section>
       </div>
     </>
   );

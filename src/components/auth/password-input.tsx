@@ -15,11 +15,13 @@ export function PasswordInput({
   maxLength?: number;
 }) {
   const [visible, setVisible] = useState(false);
+  const inputId = `${name}-input`;
   return (
-    <label>
-      {label}
+    <div className="password-control">
+      <label htmlFor={inputId}>{label}</label>
       <span className="password-field">
         <input
+          id={inputId}
           name={name}
           type={visible ? "text" : "password"}
           required
@@ -37,6 +39,6 @@ export function PasswordInput({
           {visible ? <EyeOff size={18} /> : <Eye size={18} />}
         </button>
       </span>
-    </label>
+    </div>
   );
 }

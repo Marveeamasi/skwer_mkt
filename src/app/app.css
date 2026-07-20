@@ -1,15 +1,22 @@
 .auth-page {
   min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
-  place-items: center;
-  padding: 36px 16px;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 24px;
+  padding: 24px 16px 18px;
   background:
     radial-gradient(circle at 10% 10%, #efffd4, transparent 30%), var(--paper);
 }
-.auth-page > .brand {
-  position: absolute;
-  top: 28px;
-  left: max(16px, calc((100vw - 1180px) / 2));
+.auth-header {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+.auth-content {
+  width: 100%;
+  display: grid;
+  place-items: center;
+  padding: 12px 0;
 }
 .auth-card {
   width: min(460px, 100%);
@@ -29,8 +36,8 @@
   line-height: 1.6;
 }
 .auth-foot {
-  position: absolute;
-  bottom: 14px;
+  margin: 0;
+  text-align: center;
   color: var(--muted);
   font-size: 12px;
 }
@@ -174,6 +181,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
   margin-bottom: 30px;
 }
 .app-topbar h1 {
@@ -333,6 +342,14 @@
   }
 }
 @media (max-width: 520px) {
+  .auth-page {
+    gap: 16px;
+    padding: 16px 12px max(16px, env(safe-area-inset-bottom));
+  }
+  .auth-content {
+    align-items: start;
+    padding: 0;
+  }
   .auth-card {
     padding: 26px 20px;
   }
@@ -349,9 +366,20 @@
     align-items: flex-start;
     gap: 12px;
   }
+  .app-topbar > div {
+    min-width: 0;
+    flex: 1 1 200px;
+  }
   .app-topbar .button {
     min-height: 44px;
     padding: 0 12px;
     font-size: 12px;
+  }
+  .attention {
+    grid-template-columns: 36px minmax(0, 1fr);
+  }
+  .attention > a {
+    grid-column: 2;
+    justify-self: start;
   }
 }

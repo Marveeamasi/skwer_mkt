@@ -16,20 +16,18 @@ test("guest buyer can select and reach checkout without login", async ({
   await expect(
     page.getByRole("heading", { name: "Soft Glam Set" }),
   ).toBeVisible();
-  await expect(page.getByText("₦10,800").first()).toBeVisible();
-  await page.getByRole("button", { name: /Neutral/i }).click();
+  await expect(page.getByText(/^₦[\d,]+$/).first()).toBeVisible();
+  await page.getByRole("button", { name: /Warm|Neutral/i }).first().click();
   await page.locator('a[href^="/checkout/"]:visible').click();
   await expect(
     page.getByRole("heading", { name: "Complete your order" }),
   ).toBeVisible();
   await expect(page.getByText(/No account required/i).first()).toBeVisible();
 });
-test("order bearer link has no indexing and shows timeline", async ({
-  page,
-}) => {
-  await page.goto("/order/demo-order-token");
-  await expect(page.getByText("Payment confirmed")).toBeVisible();
-  await expect(page.getByText(/Outstanding balance/i)).toBeVisible();
+test("unknown order bearer tokens disclose no order data", async ({ page }) => {
+  const response = await page.goto("/order/not-a-real-order-token");
+  expect(response?.status()).toBe(404);
+  await expect(page.getByRole("heading", { name: "404" })).toBeVisible();
 });
 test("policy pages disclose draft review status", async ({ page }) => {
   await page.goto("/privacy");
