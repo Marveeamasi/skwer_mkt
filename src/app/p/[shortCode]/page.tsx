@@ -5,6 +5,7 @@ import { ProductPurchase } from "@/components/buyer/product-purchase";
 import { getPublicCampaign } from "@/features/campaigns/public-campaign";
 import { publicConfig } from "@/lib/config";
 import { formatNaira } from "@/lib/money";
+import Image from "next/image";
 export async function generateMetadata({
   params,
 }: {
@@ -58,7 +59,10 @@ export default async function Page({
       </nav>
       <section className="product-layout shell">
         <div className="product-gallery">
-          <div className="product-hero">
+          <div className={`product-hero ${c.media[0]?.url ? "has-media" : ""}`}>
+            {c.media[0]?.url && c.media[0].type === "image" && (
+              <Image src={c.media[0].url} alt={c.media[0].alt || c.product.name} fill sizes="(max-width: 760px) 100vw, 55vw" priority unoptimized />
+            )}
             <span>Sold by {c.seller.businessName}</span>
           </div>
           <p className="notice">Seller policy: {c.seller.returnPolicy}</p>

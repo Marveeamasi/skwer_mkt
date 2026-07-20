@@ -1,14 +1,3 @@
 import { ResourcePage } from "@/components/admin/resource-page";
-export default function Page() {
-  return (
-    <ResourcePage
-      title="Campaigns"
-      description="Moderate products and preserve the review trail."
-      columns={["Campaign", "Seller", "Category", "Status", "Reports"]}
-      rows={[
-        ["Soft Glam Set", "Amara Beauty", "Beauty", "Active", "0"],
-        ["Kids Ankara Set", "Dami Styles", "Fashion", "Paused", "1"],
-      ]}
-    />
-  );
-}
+import { createClient } from "@/lib/supabase/server";
+export default async function Page(){const db=await createClient();const{data}=await db.from("campaigns").select("short_code,status,product:products(name,category),seller:seller_businesses(business_name)").order("created_at",{ascending:false}).limit(200);const rows=(data??[]).map(c=>{const product=Array.isArray(c.product)?c.product[0]:c.product,seller=Array.isArray(c.seller)?c.seller[0]:c.seller;return[product?.name??c.short_code,seller?.business_name??"Unknown",product?.category??"—",c.status,"0"]});return <ResourcePage title="Campaigns" description="Real seller campaigns for moderation review." columns={["Campaign","Seller","Category","Status","Reports"]} rows={rows}/>}

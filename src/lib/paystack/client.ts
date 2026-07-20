@@ -47,20 +47,24 @@ export async function initializePaystack(input: {
   transactionCharge?: number;
   metadata: Record<string, unknown>;
 }) {
+  const body: Record<string, unknown> = {
+    email: input.email,
+    amount: input.amount,
+    reference: input.reference,
+    callback_url: input.callbackUrl,
+    channels: ["card", "bank", "bank_transfer", "ussd"],
+    metadata: input.metadata,
+  };
+  if (input.subaccount) {
+    body.subaccount = input.subaccount;
+    body.bearer = "account";
+    if (input.transactionCharge != null)
+      body.transaction_charge = input.transactionCharge;
+  }
   return initialized.parse(
     await call("/transaction/initialize", {
       method: "POST",
-      body: JSON.stringify({
-        email: input.email,
-        amount: input.amount,
-        reference: input.reference,
-        callback_url: input.callbackUrl,
-        subaccount: input.subaccount,
-        transaction_charge: input.transactionCharge,
-        bearer: input.subaccount ? "account" : undefined,
-        channels: ["card", "bank", "bank_transfer", "ussd"],
-        metadata: input.metadata,
-      }),
+      body: JSON.stringify(body),
     }),
   );
 }

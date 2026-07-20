@@ -16,9 +16,11 @@ export function ProductPurchase({ campaign }: { campaign: PublicCampaign }) {
   const params = useSearchParams(),
     reward = params.get("reward");
   const [variant, setVariant] = useState(campaign.variants[0]?.id);
+  const [quantity, setQuantity] = useState(1);
   const selected = campaign.variants.find((item) => item.id === variant),
     soldOut = selected?.availableQuantity === 0;
-  const checkoutHref = `/checkout/${campaign.shortCode}?variant=${variant}${reward ? `&reward=${encodeURIComponent(reward)}` : ""}`;
+  const maximumQuantity = Math.min(20, selected?.availableQuantity ?? 20);
+  const checkoutHref = `/checkout/${campaign.shortCode}?variant=${variant}&quantity=${quantity}${reward ? `&reward=${encodeURIComponent(reward)}` : ""}`;
   return (
     <div className="product-info">
       <span className="eyebrow">
@@ -53,7 +55,7 @@ export function ProductPurchase({ campaign }: { campaign: PublicCampaign }) {
             <button
               key={item.id}
               className={`option ${variant === item.id ? "selected" : ""}`}
-              onClick={() => setVariant(item.id)}
+              onClick={() => { setVariant(item.id); setQuantity(1); }}
               disabled={item.availableQuantity === 0}
             >
               {item.option1Value}
@@ -65,9 +67,8 @@ export function ProductPurchase({ campaign }: { campaign: PublicCampaign }) {
       </div>
       <div className="option-group">
         <label>Quantity</label>
-        <select className="app-input" aria-label="Quantity">
-          <option>1</option>
-          {(selected?.availableQuantity ?? 0) > 1 && <option>2</option>}
+        <select className="app-input" aria-label="Quantity" value={quantity} onChange={(event)=>setQuantity(Number(event.target.value))}>
+          {Array.from({length:Math.max(1,maximumQuantity)},(_,index)=>index+1).map(value=><option key={value} value={value}>{value}</option>)}
         </select>
       </div>
       {soldOut ? (
@@ -100,7 +101,7 @@ export function ProductPurchase({ campaign }: { campaign: PublicCampaign }) {
           </Link>
         ) : (
           <Link className="button" href={checkoutHref}>
-            Buy now · {formatNaira(campaign.publicPriceKobo)}
+            Buy now · {formatNaira(campaign.publicPriceKobo * quantity)}
           </Link>
         )}
       </div>

@@ -86,6 +86,10 @@ export async function POST(request: Request) {
     if (campaignError || !campaign) throw new Error("campaign_unavailable");
     if (campaign.ends_at && new Date(campaign.ends_at) <= new Date())
       throw new Error("campaign_unavailable");
+    if (!campaign.seller.fulfilment_methods?.includes(input.fulfilmentMethod))
+      throw new Error("fulfilment_unavailable");
+    if (input.fulfilmentMethod !== "pickup" && !input.deliveryAddress)
+      throw new Error("delivery_address_required");
     const { data: variant } = await db
       .from("product_variants")
       .select("*")

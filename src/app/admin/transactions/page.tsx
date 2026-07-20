@@ -1,14 +1,4 @@
 import { ResourcePage } from "@/components/admin/resource-page";
-export default function Page() {
-  return (
-    <ResourcePage
-      title="Transactions"
-      description="Compare expected values with verified Paystack results."
-      columns={["Reference", "Expected", "Verified", "Webhook", "Status"]}
-      rows={[
-        ["PAY-A81K2", "₦10,800", "₦10,800", "Processed", "Success"],
-        ["PAY-B19X4", "₦6,500", "—", "Received", "Pending"],
-      ]}
-    />
-  );
-}
+import { createClient } from "@/lib/supabase/server";
+import { formatNaira } from "@/lib/money";
+export default async function Page(){const db=await createClient();const{data}=await db.from("payments").select("provider_reference,amount_kobo,currency,status,raw_verified_summary,processed_at").order("created_at",{ascending:false}).limit(200);const rows=(data??[]).map(p=>[p.provider_reference,formatNaira(Number(p.amount_kobo)),p.raw_verified_summary&&typeof p.raw_verified_summary==="object"&&"amount" in p.raw_verified_summary?formatNaira(Number(p.raw_verified_summary.amount)):"—",p.processed_at?"Processed":"Awaiting",p.status]);return <ResourcePage title="Transactions" description="Expected records compared with server-verified Paystack summaries." columns={["Reference","Expected","Verified","Processing","Status"]} rows={rows}/>}

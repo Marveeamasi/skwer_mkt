@@ -82,6 +82,7 @@
   top: 20px;
 }
 .product-hero {
+  position: relative;
   aspect-ratio: 4/4.2;
   border-radius: 22px;
   background: linear-gradient(135deg, #ffb29f, #f7cc65 55%, var(--lime));
@@ -89,7 +90,16 @@
   align-items: flex-end;
   padding: 20px;
 }
+.product-hero.has-media {
+  overflow: hidden;
+  background: var(--surface-soft);
+}
+.product-hero.has-media img {
+  object-fit: cover;
+}
 .product-hero span {
+  position: relative;
+  z-index: 1;
   background: white;
   border-radius: 999px;
   padding: 8px 12px;

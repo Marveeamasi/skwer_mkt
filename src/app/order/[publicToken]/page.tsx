@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Copy, MessageCircle, Share2 } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { hashToken } from "@/lib/security/tokens";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/supabase/configured";
 import { formatNaira } from "@/lib/money";
+import { ShareAction } from "@/components/shared/share-actions";
 export const metadata = {
   title: "Track order",
   robots: { index: false, follow: false },
@@ -25,6 +26,7 @@ interface SellerView {
   pickup_note: string;
 }
 interface OrderView {
+  id: string;
   public_reference: string;
   status: string;
   total_due_kobo: number;
@@ -34,6 +36,7 @@ interface OrderView {
   seller: SellerView | SellerView[];
   items: ItemView[];
   events: EventView[];
+  referral_links?: { public_code: string; status: string }[];
 }
 export default async function Page({
   params,
@@ -46,13 +49,14 @@ export default async function Page({
     const { data } = await createAdminClient()
       .from("orders")
       .select(
-        "public_reference,status,total_due_kobo,total_paid_kobo,fulfilment_method,seller_buyer_message,created_at,seller:seller_businesses(business_name,whatsapp_phone,pickup_note),items:order_items(product_name_snapshot,variant_snapshot,quantity),events:order_events(event_type,public_message,created_at)",
+        "id,public_reference,status,total_due_kobo,total_paid_kobo,fulfilment_method,seller_buyer_message,created_at,seller:seller_businesses(business_name,whatsapp_phone,pickup_note),items:order_items(product_name_snapshot,variant_snapshot,quantity),events:order_events(event_type,public_message,created_at),referral_links(public_code,status)",
       )
       .eq("public_token_hash", hashToken(publicToken))
       .single();
     order = data as unknown as OrderView | null;
   } else if (publicToken === "demo-order-token")
     order = {
+      id: "demo",
       public_reference: "SKW-DEMO-A1",
       status: "paid",
       total_due_kobo: 1080000,
@@ -77,6 +81,7 @@ export default async function Page({
           created_at: new Date().toISOString(),
         },
       ],
+      referral_links: [],
     };
   if (!order) notFound();
   const seller = Array.isArray(order.seller) ? order.seller[0] : order.seller,
@@ -87,7 +92,8 @@ export default async function Page({
             public_message: "Order created",
             created_at: new Date().toISOString(),
           },
-        ];
+        ],
+    referral = order.referral_links?.find((link) => link.status === "active");
   return (
     <main className="public-page">
       <div className="checkout-shell">
@@ -143,18 +149,14 @@ export default async function Page({
             </p>
           )}
           <div className="hero-actions">
-            <button className="button">
-              <Copy size={17} /> Save order link
-            </button>
+            <ShareAction url={`/order/${publicToken}`} title={`Order ${order.public_reference}`} text="Keep this private link to track your payment and fulfilment." label="Save order link" className="button" />
             <a
               className="button button-secondary"
               href={`https://wa.me/${seller?.whatsapp_phone}`}
             >
               <MessageCircle size={17} /> Chat with seller
             </a>
-            <button className="button button-secondary">
-              <Share2 size={17} /> Share and earn
-            </button>
+            {referral && <ShareAction url={`/r/${referral.public_code}`} title={`Recommended by a ${seller?.business_name} buyer`} text={`See what I bought from ${seller?.business_name}. Buy through my link and I can earn store credit after your completed order.`} label="Share and earn" className="button button-secondary" />}
           </div>
         </section>
       </div>

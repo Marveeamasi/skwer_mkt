@@ -12,15 +12,21 @@ export default async function Page({
   searchParams,
 }: {
   params: Promise<{ sessionId: string }>;
-  searchParams: Promise<{ variant?: string; reward?: string }>;
+  searchParams: Promise<{ variant?: string; reward?: string; quantity?: string }>;
 }) {
   const { sessionId } = await params,
-    { variant, reward } = await searchParams,
+    { variant, reward, quantity: quantityInput } = await searchParams,
     campaign = await getPublicCampaign(sessionId);
+  const quantity = Number(quantityInput ?? "1");
+  const selected = campaign?.variants.find((item) => item.id === variant);
   if (
     !campaign ||
     !variant ||
-    !campaign.variants.some((item) => item.id === variant)
+    !selected ||
+    !Number.isInteger(quantity) ||
+    quantity < 1 ||
+    quantity > 20 ||
+    (selected.availableQuantity != null && quantity > selected.availableQuantity)
   )
     notFound();
   return (
@@ -37,6 +43,7 @@ export default async function Page({
           campaign={campaign}
           variantId={variant}
           rewardCode={reward}
+          quantity={quantity}
         />
       </div>
     </main>

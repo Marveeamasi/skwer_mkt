@@ -8,10 +8,12 @@ export function CheckoutForm({
   campaign,
   variantId,
   rewardCode,
+  quantity,
 }: {
   campaign: PublicCampaign;
   variantId: string;
   rewardCode?: string;
+  quantity: number;
 }) {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState("");
@@ -109,11 +111,11 @@ export function CheckoutForm({
         A reward is checked against this seller, its expiry and the phone number
         above. It cannot be combined with a referral.
       </small>
-      <input type="hidden" name="quantity" value="1" />
+      <input type="hidden" name="quantity" value={quantity} />
       <div className="order-summary">
         <p>
-          <span>{campaign.product.name} × 1</span>
-          <strong>{formatNaira(campaign.publicPriceKobo)}</strong>
+          <span>{campaign.product.name} × {quantity}</span>
+          <strong>{formatNaira(campaign.publicPriceKobo * quantity)}</strong>
         </p>
         <p>
           <span>Delivery</span>
@@ -127,7 +129,7 @@ export function CheckoutForm({
         </p>
         <p className="total">
           <span>Before valid reward</span>
-          <strong>{formatNaira(campaign.publicPriceKobo)}</strong>
+          <strong>{formatNaira(campaign.publicPriceKobo * quantity)}</strong>
         </p>
       </div>
       <p className="notice">

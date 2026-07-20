@@ -1,20 +1,4 @@
 import { ResourcePage } from "@/components/admin/resource-page";
-export default function Page() {
-  return (
-    <ResourcePage
-      title="Rewards"
-      description="Review attribution, fraud signals and reward liability."
-      columns={["Reward", "Seller", "Amount", "State", "Fraud signal"]}
-      rows={[
-        ["RWD-7XA", "Amara Beauty", "₦500", "Available", "None"],
-        [
-          "RWD-9PB",
-          "Dami Styles",
-          "₦300",
-          "Pending review",
-          "Phone + email match",
-        ],
-      ]}
-    />
-  );
-}
+import { createClient } from "@/lib/supabase/server";
+import { formatNaira } from "@/lib/money";
+export default async function Page(){const db=await createClient();const{data}=await db.from("reward_credits").select("id,amount_kobo,status,seller:seller_businesses(business_name),flags:reward_review_flags(status)").order("created_at",{ascending:false}).limit(200);const rows=(data??[]).map(r=>{const seller=Array.isArray(r.seller)?r.seller[0]:r.seller,flags=r.flags??[];return[r.id.slice(0,8).toUpperCase(),seller?.business_name??"Unknown",formatNaira(Number(r.amount_kobo)),r.status,flags.length?`${flags.length} review flag(s)`:"None"]});return <ResourcePage title="Rewards" description="Actual reward liability and review flags." columns={["Reward","Seller","Amount","State","Fraud review"]} rows={rows}/>}

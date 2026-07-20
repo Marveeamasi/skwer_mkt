@@ -61,6 +61,7 @@ export function CampaignForm() {
   const [step, setStep] = useState(1),
     [draft, setDraft] = useState(initial),
     [file, setFile] = useState<File | null>(null),
+    [mediaConsent, setMediaConsent] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     router = useRouter(),
@@ -133,7 +134,17 @@ export function CampaignForm() {
       if (file) {
         const form = new FormData();
         form.set("file", file);
-        await fetch("/api/media/upload", { method: "POST", body: form });
+        form.set("campaignId", result.campaignId);
+        form.set("altText", draft.name);
+        form.set("consentConfirmed", String(mediaConsent));
+        const upload = await fetch("/api/media/upload", { method: "POST", body: form });
+        if (!upload.ok) {
+          const uploadResult = await upload.json();
+          console.error("campaign-image-upload", uploadResult.error ?? "upload failed");
+          router.push(`/seller/campaigns?created=${result.shortCode}&image=failed`);
+          router.refresh();
+          return;
+        }
       }
       router.push(`/seller/campaigns?created=${result.shortCode}`);
       router.refresh();
@@ -165,6 +176,7 @@ export function CampaignForm() {
               />
             </div>
           </label>
+          {file && <label className="checkbox"><input type="checkbox" required checked={mediaConsent} onChange={(event)=>setMediaConsent(event.target.checked)} /> I own this image or have permission from every identifiable person to publish it.</label>}
           <label>
             Product title
             <input

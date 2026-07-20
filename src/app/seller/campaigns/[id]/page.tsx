@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { formatNaira } from "@/lib/money";
 import { StatusForm } from "@/components/seller/status-form";
+import { ShareAction } from "@/components/shared/share-actions";
 interface Row {
   id: string;
   short_code: string;
@@ -97,9 +98,7 @@ export default async function Page({
             >
               Share on WhatsApp
             </a>
-            <button className="button button-small button-secondary">
-              Copy link
-            </button>
+            <ShareAction url={`/p/${c.short_code}`} title={p.name} text={`Order ${p.name} securely from this sales link.`} label="Copy or share link" />
           </div>
         </section>
       </div>

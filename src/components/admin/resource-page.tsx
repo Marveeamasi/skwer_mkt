@@ -3,13 +3,11 @@ export function ResourcePage({
   description,
   columns,
   rows,
-  action,
 }: {
   title: string;
   description: string;
   columns: string[];
   rows: string[][];
-  action?: string;
 }) {
   return (
     <>
@@ -18,20 +16,9 @@ export function ResourcePage({
           <h1>{title}</h1>
           <p>{description}</p>
         </div>
-        {action && <button className="button button-small">{action}</button>}
       </header>
       <section className="panel">
-        <div className="form-between">
-          <input
-            className="app-input"
-            placeholder={`Search ${title.toLowerCase()}`}
-            aria-label={`Search ${title}`}
-          />
-          <button className="button button-small button-secondary">
-            Export
-          </button>
-        </div>
-        <div className="table-wrap">
+        {rows.length ? <div className="table-wrap" data-horizontal-scroll>
           <table className="data-table">
             <thead>
               <tr>
@@ -50,7 +37,7 @@ export function ResourcePage({
               ))}
             </tbody>
           </table>
-        </div>
+        </div> : <div className="empty-state"><h2>No records yet</h2><p>Verified records will appear here when available.</p></div>}
       </section>
     </>
   );

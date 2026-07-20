@@ -9,7 +9,8 @@ interface CampaignRow {
   public_price_kobo: number;
   product: { name: string } | { name: string }[] | null;
 }
-export default async function Page() {
+export default async function Page({ searchParams }: { searchParams: Promise<{ created?: string; image?: string }> }) {
+  const query = await searchParams;
   const db = await createClient(),
     { data } = await db
       .from("campaigns")
@@ -27,6 +28,7 @@ export default async function Page() {
           <PackagePlus size={17} /> New sales link
         </Link>
       </header>
+      {query.created && <p className="notice" role="status">Sales link <strong>/p/{query.created}</strong> was published.{query.image === "failed" ? " Its image did not upload, so the link is using a safe placeholder. You can still share it." : " It is ready to share."}</p>}
       {rows.length ? (
         <section className="panel table-wrap">
           <table className="data-table">

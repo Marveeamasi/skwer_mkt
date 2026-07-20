@@ -12,6 +12,7 @@ export interface PublicCampaign {
   chatFallbackEnabled: boolean;
   noindex: boolean;
   product: { name: string; description: string; category: string };
+  media: { path: string; provider: "supabase" | "cloudinary"; type: "image" | "video"; alt: string; url?: string }[];
   seller: {
     businessName: string;
     city: string;
@@ -49,6 +50,7 @@ export const demoCampaign: PublicCampaign = {
       "Everything you need for an easy everyday glow. Original products, carefully packed by Amara Beauty.",
     category: "Beauty",
   },
+  media: [],
   seller: {
     businessName: "Amara Beauty",
     city: "Port Harcourt",
@@ -91,6 +93,14 @@ export const getPublicCampaign = cache(
       { p_short_code: shortCode },
     );
     if (error || !data) return null;
-    return data as PublicCampaign;
+    const campaign = data as PublicCampaign;
+    campaign.media = (campaign.media ?? []).map((asset) => {
+      const encodedPath = asset.path.split("/").map(encodeURIComponent).join("/");
+      const url = asset.provider === "cloudinary"
+        ? `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/${encodedPath}`
+        : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/campaign-media/${encodedPath}`;
+      return { ...asset, url };
+    });
+    return campaign;
   },
 );
