@@ -3,6 +3,7 @@ import { hashToken } from "@/lib/security/tokens";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatNaira } from "@/lib/money";
 import { BalancePaymentButton } from "@/components/buyer/balance-payment-button";
+import { enforceBearerLookupLimit } from "@/lib/security/bearer-lookup";
 export const metadata = {
   title: "Pay order balance",
   robots: { index: false, follow: false },
@@ -12,7 +13,9 @@ export default async function Page({
 }: {
   params: Promise<{ publicToken: string }>;
 }) {
-  const { publicToken } = await params,
+  const { publicToken } = await params;
+  try { await enforceBearerLookupLimit("balance-token-lookup"); } catch { notFound(); }
+  const
     { data: link } = await createAdminClient()
       .from("order_payment_links")
       .select(

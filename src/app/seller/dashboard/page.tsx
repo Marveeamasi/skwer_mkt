@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { formatNaira } from "@/lib/money";
 import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 export default async function Page() {
   const db = await createClient(),
     today = new Date();
@@ -70,6 +71,7 @@ export default async function Page() {
     product = Array.isArray(campaign?.product)
       ? campaign.product[0]
       : campaign?.product;
+  if (!business) redirect("/seller/onboarding");
   return (
     <>
       <header className="app-topbar">

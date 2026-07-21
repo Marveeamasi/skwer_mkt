@@ -80,6 +80,19 @@
   font-weight: 500;
   color: var(--muted);
 }
+.settings-help {
+  margin: 0;
+  color: var(--text-soft, var(--muted));
+  font-size: 13px;
+  line-height: 1.6;
+}
+.payment-onboarding {
+  margin-top: 0;
+}
+.payment-onboarding h3 {
+  margin: 0;
+  font-size: 16px;
+}
 .form-stack .button {
   width: 100%;
   margin-top: 4px;
@@ -194,6 +207,12 @@
   margin: 4px 0 0;
   color: var(--muted);
   font-size: 13px;
+}
+.app-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 .metric-grid {
   display: grid;
@@ -374,6 +393,12 @@
     min-height: 44px;
     padding: 0 12px;
     font-size: 12px;
+  }
+  .app-top-actions {
+    width: 100%;
+  }
+  .app-top-actions .button {
+    flex: 1 1 140px;
   }
   .attention {
     grid-template-columns: 36px minmax(0, 1fr);

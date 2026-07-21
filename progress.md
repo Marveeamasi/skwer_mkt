@@ -1,6 +1,6 @@
 # SKWER MKT — Implementation Progress Book
 
-Last updated: 2026-07-20 (Africa/Lagos)
+Last updated: 2026-07-21 (Africa/Lagos)
 
 Status meanings:
 
@@ -11,13 +11,13 @@ Status meanings:
 
 ## Executive status
 
-The application is a working, buildable Next.js product with a verified hosted Supabase schema, public buyer path, authenticated campaign/order/settings queries and core payment/referral/reward services. It is **not yet production-complete**. Admin screens still use fictional display data and external payment/legal launch gates remain. Paystack test payments are enabled locally; split/live production payments remain disabled.
+The application is a working, buildable Next.js product with a verified hosted Supabase schema, public buyer path, authenticated seller/admin queries and core payment/referral/reward services. It is **not yet production-complete**. Several seller/admin mutations and external payment/legal launch gates remain. Paystack test payments are enabled locally; split/live production payments remain disabled.
 
 ### Verified totals
 
 - Hosted database: 4 sellers, 8 campaigns, 4 orders, 1 available reward, 1 restock request, 1 substitution offer, 1 active fee configuration.
-- Unit tests: 43 passing across pricing, security, tokens, order transitions, money/deposit boundaries, phone validation, signed-value tampering, referrals, rewards, attribution, mobile theme-gesture classification, generic EmailJS payload behavior, provider fallback reporting, and Paystack split/non-split request bodies.
-- Production build: passing on 2026-07-20 after the responsive/auth/settings/admin work; 36 static pages were generated and all application/API routes compiled.
+- Unit tests: 45 passing across pricing, security, tokens, order transitions, money/deposit boundaries, phone validation, signed-value tampering, referrals, rewards, attribution, mobile theme-gesture classification, generic EmailJS payload behavior, provider fallback reporting, Paystack split/non-split request bodies, bank filtering, account resolution and subaccount creation payloads.
+- Production build: passing on 2026-07-21 for the current tree; 39 static pages were generated and all application/API routes, including `/s/[slug]`, `/api/auth/login`, `/api/paystack/banks` and `/api/seller/payment-account`, compiled.
 - TypeScript strict check: passing.
 - ESLint: passing.
 - Browser E2E: the prior 8-scenario claim was re-audited and found stale because it hard-coded an old seed price and a demo-only bearer token. Those assertions are now behavior-based; new auth/public/seller viewport checks were added. Auth and all public buyer routes pass at Pixel 5 width with no page overflow or footer collision. The combined Windows suite still exceeds its process timeout, so the full command remains PARTIAL.
@@ -40,8 +40,8 @@ The application is a working, buildable Next.js product with a verified hosted S
 ### PARTIAL
 
 - Independent 48-byte cryptographically random `ORDER_TOKEN_SECRET`, `REFERRAL_TOKEN_SECRET`, and `CRON_SECRET` values were generated into ignored `.env.local`; only uniqueness/length was logged.
-- Migration 5 is applied and its hosted database-backed rate-limit RPC was verified. Signup OTP and restock submission now enforce it; checkout, referral, reward, login and token lookup wiring remains.
-- Referral-link resolution and reward validation now enforce the hosted database rate limiter, reject malformed/bounded inputs, and avoid caching private validation responses. Checkout, login and bearer-page lookup wiring remains.
+- Migration 5 is applied and its hosted database-backed rate-limit RPC was verified. Signup OTP, restock submission, checkout, referral resolution, reward validation, password login and private bearer-page lookups now enforce it.
+- Referral-link resolution and reward validation reject malformed/bounded inputs and avoid caching private validation responses. Password login uses a server endpoint with a generic invalid-credential response, and order/reward/balance bearer pages rate-limit lookups by requester address.
 - Audit tables and admin UI exist, but all sensitive mutations are not yet routed through a shared audit service.
 - File validation exists server-side. Campaign upload now requires explicit ownership/identifiable-person publication consent in both UI and server request before `consent_confirmed` is stored. Browser compression and metadata stripping are not implemented.
 
@@ -52,10 +52,12 @@ The application is a working, buildable Next.js product with a verified hosted S
 - Rebrandable public name, short name, tagline, URL, support details, and feature gates.
 - Safe `.env.example` and populated ignored `.env.local`.
 - Product positioning, landing page, inclusive-pricing explanation, and a responsive visual how-it-works walkthrough showing seller link creation, buyer selection, verified order tracking and referral qualification.
+- 2026-07-21 pilot feedback correction: the homepage keeps the original growth promise and `Create my first sales link` CTA, removes the misleading buyer `Buy now` control from the vendor acquisition hero, and uses a seller-result preview instead. How-it-works is reduced to three vendor steps while preserving secure payment, order records and earned referral value.
 - Privacy, platform terms, seller terms, buyer terms, refund/cancellation, prohibited products, referral reward, dispute, and content/photo-consent pages.
 - Every policy page is clearly marked as a draft requiring professional review.
 - Square-background thumbs-up SVG logo system is implemented for navigation, favicon, web manifest and reusable brand assets; all default Vercel/Next placeholder assets were removed.
 - Theme defaults to the browser colour preference, remembers a deliberate user override, and toggles only after a thresholded horizontal pointer release. Mobile pointer cancellation was corrected with `touch-action: pan-y pinch-zoom`, a calibrated touch threshold, protected native horizontal-scroll zones and safe storage handling. It does not cancel vertical scrolling, excludes interactive controls, announces the result accessibly, and respects reduced motion. Device retest awaits deployment of the latest commit.
+- Primary lime buttons now explicitly use dark ink text in both themes and retain ink text/border/shadow on hover and keyboard focus. Dark mode uses a brighter controlled hover lime, while the hero underline uses a muted olive-lime instead of the glare-heavy light-theme highlight.
 
 ### EXTERNAL GATE
 
@@ -69,7 +71,7 @@ The application is a working, buildable Next.js product with a verified hosted S
 ### COMPLETE
 
 - Next.js 16.2.10 App Router, React 19, strict TypeScript, Tailwind 4, local Plus Jakarta Sans, lockfile, Vitest and Playwright setup.
-- All five hosted Supabase migrations plus `seed.sql` were applied by the user. Migration 5's rate-limit table/RPC was verified against the hosted project.
+- All eight hosted Supabase migrations plus `seed.sql` were applied by the user. Migration 5's rate-limit table/RPC and the later balance/refund/reward functions were verified against the hosted project where noted below.
 - Migration 5 atomic campaign creation was verified with an authenticated seed seller, seller-scoped readback, and immediate service-role cleanup.
 - Schema includes every specified V1 entity plus analytics, invites, and custom email OTP records.
 - RLS enabled across all application tables; hosted anonymous isolation verified.
@@ -89,7 +91,7 @@ The application is a working, buildable Next.js product with a verified hosted S
 - EmailJS now uses one reusable text template for every transactional purpose. The only template parameters are `to`, `to_email`, `subject`, `text`, `from_name`, and `reply_to`; subjects and complete plain-text bodies are generated per flow. The reward-ready flow now supplies its own complete plain-text message and secure link. EmailJS private API access is optional, while the Vercel provider continues to receive HTML and text plus its server secret. Focused adapter tests pass for both public-key-only and optional-private-key configurations.
 - 2026-07-20 registration diagnosis was resolved: the user enabled EmailJS non-browser API access, received the OTP, registered and logged in successfully. The UI continues to disclose fallback use instead of implying delivery.
 - OTP-step DOM reuse was fixed with keyed steps and a controlled numeric code field, preventing the email address from appearing in the verification-code input. Resend has independent loading copy and all recently issued unexpired codes remain usable when delivery is delayed.
-- Seller onboarding business-details UI now persists through an authenticated server endpoint with normalized phone data and an audit record. Payment onboarding and invite-token enforcement remain.
+- Seller onboarding business details persist through an authenticated server endpoint with normalized phone data and an audit record. Step 2 now loads Nigerian banks from Paystack, validates a 10-digit account, resolves its owner, creates the seller subaccount server-side, stores only the last four digits plus provider identifiers, rate-limits/audits the mutation, blocks unsafe replacement and sends the seller to first-link creation. A real vendor bank submission and Paystack approval state still require provider/browser verification; invite-token enforcement remains.
 - Login works through Supabase password auth. Password recovery is implemented; manual real-email reset verification remains.
 - Optional fingerprint/passkey quick login is not implemented.
 - Admin/support roles are enforced in route protection, but role-management operations are not implemented.
@@ -101,6 +103,7 @@ The application is a working, buildable Next.js product with a verified hosted S
 - Integer-kobo money helpers and deterministic server-authoritative gross-up pricing engine.
 - Paystack threshold, percentage, cap, platform fee, safety buffer, and rounding support.
 - Four-screen mobile campaign-builder UI with maximum-two-dimension wording and pricing preview.
+- Selected campaign media now shows an immediate buyer-facing preview with filename, size and a remove/reselect action before publication.
 - Public product route `/p/[shortCode]` connected to hosted public campaign RPC.
 - Seller identity, product, inclusive price, genuine availability, variants, reward explanation, fulfilment/policy, secure checkout trust, sticky mobile buy action, and WhatsApp seller link.
 - Dynamic per-campaign title, description, canonical, robots, Open Graph, Twitter card, and generated OG image.
@@ -111,6 +114,7 @@ The application is a working, buildable Next.js product with a verified hosted S
 - Campaign-builder state and authenticated submit endpoint calculate with the active hosted fee configuration and call the applied atomic product/campaign/variant RPC. Authenticated hosted creation, seller-scoped readback, and cleanup were verified. Selected product images now upload through the configured provider, verify campaign ownership, persist to `product_media`, clean up the asset if persistence fails, and render on the public buyer page; live-provider browser verification remains.
 - Product pages render the primary uploaded product image with a safe generated placeholder when no usable image exists. Multi-image carousel/testimonials remain out of the current implementation.
 - Campaign WhatsApp sharing and Web Share/clipboard fallback are connected. Downloadable square/vertical Status cards and generated asset downloads remain.
+- Sellers with multiple active products now have an optional single multi-product sales link at `/s/[seller-slug]`. It lists real active products and hands each selection to the existing campaign-specific checkout, preserving campaign pricing, deposits, stock, referral and refund correctness. This is an optional convenience, not a change from SKWER's smart product-link positioning and not a cross-campaign cart.
 - Campaign closing does not yet invoke provider-agnostic media cleanup.
 - Cloudinary upload adapter is implemented but not integration-tested with the configured account.
 - Seller campaign list and individual campaign management pages use seller-isolated hosted queries; editing campaign fields and media remains incomplete.
@@ -169,6 +173,7 @@ The application is a working, buildable Next.js product with a verified hosted S
 ### COMPLETE
 
 - Responsive seller shell and intended information hierarchy. Auth layout now uses normal grid flow instead of absolute header/footer positioning, preventing the reported mobile form/footer collision; Pixel 5 auth/public overflow assertions pass.
+- Newly registered sellers without a business record are sent directly from the dashboard to onboarding instead of seeing an unexplained empty workspace. Multi-product sharing is surfaced beside their sales-link list once they have more than one product.
 - Dashboard, campaign list, orders, order detail, customers, reports, settings, and onboarding screens.
 - UI covers attention reminders, referral metrics, restock demand, payment/balance visibility, customer preferences from actual-purchase concept, and profit-estimate disclaimer.
 - Restock and substitution tables plus verified seed records.
@@ -190,8 +195,6 @@ The application is a working, buildable Next.js product with a verified hosted S
 
 - Protected admin shell and pages for overview, sellers, campaigns, transactions, rewards, disputes, pricing, and settings.
 - Admin displays required metric categories, pricing version concept, payment mismatch/webhook review, reward fraud review, moderation and launch gates.
-
-### COMPLETE
 
 - Admin overview, sellers, campaigns, transactions, rewards, pricing and launch-settings screens now query real hosted records/configuration. Invented metrics and nonfunctional search/export/invite/pricing/settings buttons were removed. Refund request submission remains connected to its audited Paystack lifecycle.
 
@@ -216,7 +219,7 @@ The application is a working, buildable Next.js product with a verified hosted S
 
 ### PARTIAL
 
-- Playwright now contains behavior-based critical paths plus explicit auth/public/seller horizontal-overflow and auth footer-collision checks for mobile and desktop. Auth/public mobile checks pass. The combined Windows run still exceeds the process timeout during real hosted seller-route compilation/lifecycle, so the complete command is not green.
+- Playwright now contains behavior-based critical paths plus explicit auth/public/seller horizontal-overflow, auth footer-collision and selected-campaign-image preview/remove checks. The corrected seller promise/CTA and all public routes (including `/s/amara-beauty`) pass at Pixel 5 width against the current production build. Authenticated seller checks still exceed the Windows/hosted-login process timeout before returning an assertion, so those checks and the complete command remain PARTIAL.
 - SQL pgTAP file exists, but it was not run because local Docker/Supabase is unavailable. Hosted behavioral RLS checks were run instead.
 - Integration tests for checkout database writes, duplicate webhooks, amount mismatch, seller isolation, referral qualification, reward reversal, and token scope are not automated yet.
 - Full specified E2E payment/referral/reward loop is not automated yet.
@@ -231,11 +234,10 @@ Cash wallets/withdrawals, loans, escrow claims, BNPL, credit scoring, unverified
 ## Immediate next execution order
 
 1. Run real Paystack test-mode checkout/webhook/balance completion and stock-reservation compensation coverage.
-2. Finish database-backed rate-limit wiring for checkout, login and bearer-token lookup.
-3. Finish payment onboarding and media record linking; seller onboarding and authenticated campaign creation are already hosted-verified.
-4. Apply and verify migration 8; then finish substitutions, restock operations, filters, notes/messages and remaining exports.
-5. Connect audited admin mutations and analytics.
-6. Complete hosted integration tests, reliable Playwright lifecycle, performance/accessibility checks, and deployment documentation.
+2. Browser-verify seller payment onboarding with a consenting pilot vendor's real bank details and confirm the Paystack subaccount/approval state; the implementation and provider adapters are complete and tested without storing full account numbers.
+3. Finish substitutions, restock operations, filters, notes/messages and remaining exports. Migration 8 is already applied and its refund completion function is hosted-verified.
+4. Connect audited admin mutations and analytics.
+5. Complete hosted integration tests, reliable Playwright lifecycle, performance/accessibility checks, and deployment documentation.
 
 ## External launch gates
 

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { PackagePlus } from "lucide-react";
 import { formatNaira } from "@/lib/money";
 import { createClient } from "@/lib/supabase/server";
+import { ShareAction } from "@/components/shared/share-actions";
 interface CampaignRow {
   id: string;
   short_code: string;
@@ -9,13 +10,20 @@ interface CampaignRow {
   public_price_kobo: number;
   product: { name: string } | { name: string }[] | null;
 }
-export default async function Page({ searchParams }: { searchParams: Promise<{ created?: string; image?: string }> }) {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ created?: string; image?: string }>;
+}) {
   const query = await searchParams;
   const db = await createClient(),
-    { data } = await db
-      .from("campaigns")
-      .select("id,short_code,status,public_price_kobo,product:products(name)")
-      .order("created_at", { ascending: false }),
+    [{ data }, { data: business }] = await Promise.all([
+      db
+        .from("campaigns")
+        .select("id,short_code,status,public_price_kobo,product:products(name)")
+        .order("created_at", { ascending: false }),
+      db.from("seller_businesses").select("business_name,slug").maybeSingle(),
+    ]),
     rows = (data ?? []) as unknown as CampaignRow[];
   return (
     <>
@@ -24,11 +32,28 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ c
           <h1>Sales links</h1>
           <p>Create, share and manage one product at a time.</p>
         </div>
-        <Link className="button button-small" href="/seller/campaigns/new">
-          <PackagePlus size={17} /> New sales link
-        </Link>
+        <div className="app-top-actions">
+          {business && rows.length > 1 && (
+            <ShareAction
+              url={`/s/${business.slug}`}
+              title={`Products from ${business.business_name}`}
+              text={`Choose and order from ${business.business_name}.`}
+              label="Share products together"
+            />
+          )}
+          <Link className="button button-small" href="/seller/campaigns/new">
+            <PackagePlus size={17} /> Add product
+          </Link>
+        </div>
       </header>
-      {query.created && <p className="notice" role="status">Sales link <strong>/p/{query.created}</strong> was published.{query.image === "failed" ? " Its image did not upload, so the link is using a safe placeholder. You can still share it." : " It is ready to share."}</p>}
+      {query.created && (
+        <p className="notice" role="status">
+          Sales link <strong>/p/{query.created}</strong> was published.
+          {query.image === "failed"
+            ? " Its image did not upload, so the link is using a safe placeholder. You can still share it."
+            : " It is ready to share."}
+        </p>
+      )}
       {rows.length ? (
         <section className="panel table-wrap">
           <table className="data-table">

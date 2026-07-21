@@ -104,3 +104,77 @@ export async function createPaystackRefund(input: {
     }),
   );
 }
+
+const banksResponse = z.object({
+  status: z.boolean(),
+  data: z.array(
+    z.object({
+      name: z.string(),
+      code: z.string(),
+      active: z.boolean(),
+      currency: z.string(),
+      country: z.string(),
+    }),
+  ),
+});
+
+const resolvedAccount = z.object({
+  status: z.boolean(),
+  data: z.object({
+    account_number: z.string(),
+    account_name: z.string(),
+  }),
+});
+
+const subaccountCreated = z.object({
+  status: z.boolean(),
+  data: z.object({
+    subaccount_code: z.string(),
+    account_name: z.string(),
+    is_verified: z.boolean().optional().default(false),
+  }),
+});
+
+export async function listNigerianBanks() {
+  const result = banksResponse.parse(
+    await call("/bank?country=nigeria&currency=NGN&perPage=100"),
+  );
+  return result.data
+    .filter((bank) => bank.active && bank.currency === "NGN")
+    .map(({ name, code }) => ({ name, code }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export async function resolvePaystackAccount(input: {
+  accountNumber: string;
+  bankCode: string;
+}) {
+  return resolvedAccount.parse(
+    await call(
+      `/bank/resolve?account_number=${encodeURIComponent(input.accountNumber)}&bank_code=${encodeURIComponent(input.bankCode)}`,
+    ),
+  ).data;
+}
+
+export async function createPaystackSubaccount(input: {
+  businessName: string;
+  bankCode: string;
+  accountNumber: string;
+  email: string;
+  phone: string;
+}) {
+  return subaccountCreated.parse(
+    await call("/subaccount", {
+      method: "POST",
+      body: JSON.stringify({
+        business_name: input.businessName,
+        settlement_bank: input.bankCode,
+        account_number: input.accountNumber,
+        percentage_charge: 0,
+        description: `${input.businessName} seller settlement account`,
+        primary_contact_email: input.email,
+        primary_contact_phone: input.phone,
+      }),
+    }),
+  ).data;
+}

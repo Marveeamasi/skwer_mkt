@@ -1,7 +1,6 @@
 "use client";
 import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/browser";
 import { useRouter } from "next/navigation";
 import { PasswordInput } from "@/components/auth/password-input";
 export function LoginForm() {
@@ -14,15 +13,24 @@ export function LoginForm() {
     setError("");
     const form = new FormData(event.currentTarget);
     try {
-      const { error } = await createClient().auth.signInWithPassword({
-        email: String(form.get("email")).trim().toLowerCase(),
-        password: String(form.get("password")),
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          email: String(form.get("email")).trim().toLowerCase(),
+          password: String(form.get("password")),
+        }),
       });
-      if (error) throw error;
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error);
       router.push("/seller/dashboard");
       router.refresh();
-    } catch {
-      setError("Email or password is incorrect.");
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Email or password is incorrect.",
+      );
     } finally {
       setBusy(false);
     }

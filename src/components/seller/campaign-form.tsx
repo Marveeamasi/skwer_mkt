@@ -1,6 +1,7 @@
 "use client";
-import { FormEvent, useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, ImagePlus } from "lucide-react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
+import { ArrowLeft, ArrowRight, Check, ImagePlus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   calculatePublicPrice,
@@ -73,7 +74,14 @@ export function CampaignForm() {
           previewFee,
         ),
       [draft.takeHome, draft.reward],
-    );
+    ),
+    previewUrl = useMemo(() => (file ? URL.createObjectURL(file) : ""), [file]);
+  useEffect(
+    () => () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    },
+    [previewUrl],
+  );
   function set<K extends keyof Draft>(key: K, value: Draft[K]) {
     setDraft((d) => ({ ...d, [key]: value }));
   }
@@ -137,11 +145,19 @@ export function CampaignForm() {
         form.set("campaignId", result.campaignId);
         form.set("altText", draft.name);
         form.set("consentConfirmed", String(mediaConsent));
-        const upload = await fetch("/api/media/upload", { method: "POST", body: form });
+        const upload = await fetch("/api/media/upload", {
+          method: "POST",
+          body: form,
+        });
         if (!upload.ok) {
           const uploadResult = await upload.json();
-          console.error("campaign-image-upload", uploadResult.error ?? "upload failed");
-          router.push(`/seller/campaigns?created=${result.shortCode}&image=failed`);
+          console.error(
+            "campaign-image-upload",
+            uploadResult.error ?? "upload failed",
+          );
+          router.push(
+            `/seller/campaigns?created=${result.shortCode}&image=failed`,
+          );
           router.refresh();
           return;
         }
@@ -176,7 +192,48 @@ export function CampaignForm() {
               />
             </div>
           </label>
-          {file && <label className="checkbox"><input type="checkbox" required checked={mediaConsent} onChange={(event)=>setMediaConsent(event.target.checked)} /> I own this image or have permission from every identifiable person to publish it.</label>}
+          {file && previewUrl && (
+            <div className="media-preview">
+              <div>
+                <Image
+                  src={previewUrl}
+                  alt="Selected product preview"
+                  fill
+                  sizes="(max-width: 600px) 100vw, 560px"
+                  unoptimized
+                />
+              </div>
+              <p>
+                <strong>{file.name}</strong>
+                <small>
+                  {Math.max(1, Math.round(file.size / 1024))} KB · This is the
+                  image buyers will see.
+                </small>
+              </p>
+              <button
+                type="button"
+                className="button button-small button-secondary"
+                onClick={() => {
+                  setFile(null);
+                  setMediaConsent(false);
+                }}
+              >
+                <Trash2 size={16} /> Remove
+              </button>
+            </div>
+          )}
+          {file && (
+            <label className="checkbox">
+              <input
+                type="checkbox"
+                required
+                checked={mediaConsent}
+                onChange={(event) => setMediaConsent(event.target.checked)}
+              />{" "}
+              I own this image or have permission from every identifiable person
+              to publish it.
+            </label>
+          )}
           <label>
             Product title
             <input

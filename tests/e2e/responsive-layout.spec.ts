@@ -25,7 +25,9 @@ test("auth cards, branding and footer never overlap", async ({ page }) => {
       const header = document
         .querySelector(".auth-header")!
         .getBoundingClientRect();
-      const card = document.querySelector(".auth-card")!.getBoundingClientRect();
+      const card = document
+        .querySelector(".auth-card")!
+        .getBoundingClientRect();
       const footer = document
         .querySelector(".auth-foot")!
         .getBoundingClientRect();
@@ -46,6 +48,7 @@ test("public buyer routes fit the viewport", async ({ page }) => {
     "/",
     "/how-it-works",
     "/p/GLAM-PH-01",
+    "/s/amara-beauty",
     "/pricing",
     "/privacy",
     "/refunds",
@@ -76,4 +79,33 @@ test("authenticated seller shell remains usable without page overflow", async ({
     await expect(page.locator(".app-main")).toBeVisible();
     await expectNoHorizontalPageOverflow(page);
   }
+});
+
+test("seller sees and can remove a selected campaign image before publishing", async ({
+  page,
+}) => {
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill("amara@example.test");
+  await page.getByLabel("Password", { exact: true }).fill("LocalOnly-123!");
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.waitForURL(/\/seller\//);
+  await page.goto("/seller/campaigns/new");
+
+  const productImage = page.getByLabel("Product image").locator('input[type="file"]');
+  await productImage.setInputFiles({
+    name: "preview-check.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Z5xkAAAAASUVORK5CYII=",
+      "base64",
+    ),
+  });
+
+  await expect(page.getByAltText("Selected product preview")).toBeVisible();
+  await expect(page.getByText("preview-check.png")).toBeVisible();
+  await expect(page.getByText(/This is the image buyers will see/i)).toBeVisible();
+
+  await page.getByRole("button", { name: "Remove" }).click();
+  await expect(page.getByAltText("Selected product preview")).toHaveCount(0);
+  await expect(productImage).toHaveValue("");
 });

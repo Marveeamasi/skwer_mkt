@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Gift, Share2 } from "lucide-react";
+import { Gift } from "lucide-react";
 import { formatNaira } from "@/lib/money";
 import { hashToken } from "@/lib/security/tokens";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { enforceBearerLookupLimit } from "@/lib/security/bearer-lookup";
+import { ShareAction } from "@/components/shared/share-actions";
 export const metadata = {
   title: "Buyer reward",
   robots: { index: false, follow: false },
@@ -22,7 +24,9 @@ export default async function Page({
 }: {
   params: Promise<{ publicToken: string }>;
 }) {
-  const { publicToken } = await params,
+  const { publicToken } = await params;
+  try { await enforceBearerLookupLimit("reward-token-lookup"); } catch { notFound(); }
+  const
     { data } = await createAdminClient()
       .from("reward_credits")
       .select(
@@ -58,9 +62,7 @@ export default async function Page({
                 Use this reward
               </Link>
             )}
-            <button className="button button-secondary">
-              <Share2 size={17} /> Share product again
-            </button>
+            {campaign && <ShareAction url={`/p/${campaign.short_code}`} title={`Product from ${seller?.business_name}`} text={`See this product from ${seller?.business_name}.`} label="Share product again" className="button button-secondary" />}
           </div>
         </section>
       </div>

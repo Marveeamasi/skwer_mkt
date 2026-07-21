@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/supabase/configured";
 import { formatNaira } from "@/lib/money";
 import { ShareAction } from "@/components/shared/share-actions";
+import { enforceBearerLookupLimit } from "@/lib/security/bearer-lookup";
 export const metadata = {
   title: "Track order",
   robots: { index: false, follow: false },
@@ -44,6 +45,7 @@ export default async function Page({
   params: Promise<{ publicToken: string }>;
 }) {
   const { publicToken } = await params;
+  try { await enforceBearerLookupLimit("order-token-lookup"); } catch { notFound(); }
   let order: OrderView | null = null;
   if (isSupabaseConfigured()) {
     const { data } = await createAdminClient()

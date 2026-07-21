@@ -2,28 +2,29 @@ import Link from "next/link";
 import {
   ArrowRight,
   BadgeCheck,
-  MessageCircle,
-  PackageCheck,
+  Check,
+  PackagePlus,
+  Share2,
   ShieldCheck,
-  Sparkles,
+  ShoppingBag,
 } from "lucide-react";
 import { publicConfig } from "@/lib/config";
 
 const steps = [
   [
-    "01",
-    "Add one product",
-    "Choose the options, stock and amount you must receive.",
+    PackagePlus,
+    "Add what you sell",
+    "Create products with their prices, options and available stock.",
   ],
   [
-    "02",
-    "Share it on WhatsApp",
-    "Post one polished sales link on Status, groups or private chat.",
+    Share2,
+    "Share your sales link",
+    "Post it on Status, groups and customer chats.",
   ],
   [
-    "03",
-    "Sell, track and grow",
-    "Payment records the order. Happy buyers can bring the next buyer.",
+    ShoppingBag,
+    "Receive organised orders",
+    "Buyers choose and pay; you see the order and what to fulfil.",
   ],
 ] as const;
 
@@ -50,11 +51,9 @@ export default function Home() {
           </Link>
         </div>
       </nav>
-      <section className="hero shell">
+      <section className="hero shell vendor-hero">
         <div className="hero-copy">
-          <span className="eyebrow">
-            <Sparkles size={16} /> Built for WhatsApp sellers
-          </span>
+          <span className="eyebrow">Built for WhatsApp sellers</span>
           <h1>
             Your WhatsApp customers can bring your <span>next customers.</span>
           </h1>
@@ -72,47 +71,53 @@ export default function Home() {
           </div>
           <div className="trust-row">
             <span>
-              <ShieldCheck /> Secure Paystack checkout
-            </span>
-            <span>
               <BadgeCheck /> No monthly fee
             </span>
             <span>
-              <MessageCircle /> WhatsApp stays your front door
+              <ShieldCheck /> Paystack checkout
+            </span>
+            <span>
+              <Check /> Buyers need no account
             </span>
           </div>
         </div>
-        <div className="product-demo" aria-label="Example product sales link">
-          <div className="demo-top">
+        <div
+          className="seller-preview"
+          aria-label="Example of what a seller receives"
+        >
+          <div className="seller-preview-head">
             <span className="seller-avatar">AM</span>
             <div>
+              <small>Your sales link</small>
               <strong>Amara Beauty</strong>
-              <small>Port Harcourt · Verified payment account</small>
             </div>
+            <span className="badge">Ready to share</span>
           </div>
-          <div className="demo-photo">
-            <span>Everyday glow kit</span>
+          <div className="preview-link">
+            skwer-mkt.vercel.app/s/amara-beauty
           </div>
-          <div className="demo-body">
-            <div className="row">
-              <h2>Soft Glam Set</h2>
-              <strong>₦10,800</strong>
-            </div>
-            <p>Everything you need for an easy everyday look.</p>
-            <div className="reward">
-              <Sparkles size={18} />
-              <span>
-                Earn <strong>₦500 off</strong> your next order when a friend
-                buys.
-              </span>
-            </div>
-            <button className="button demo-buy">
-              Buy now <ArrowRight size={18} />
-            </button>
-            <small className="secure">
-              <ShieldCheck size={15} /> Secure payment powered by Paystack · No
-              account required
-            </small>
+          <div className="preview-products">
+            <article>
+              <i className="preview-art coral" />
+              <div>
+                <strong>Soft Glam Set</strong>
+                <small>3 options · In stock</small>
+              </div>
+            </article>
+            <article>
+              <i className="preview-art lime" />
+              <div>
+                <strong>Lip Care Bundle</strong>
+                <small>2 options · In stock</small>
+              </div>
+            </article>
+          </div>
+          <div className="preview-result">
+            <Check size={18} />
+            <span>
+              <strong>Add one product or a few.</strong>
+              <small>Share the link when you are ready.</small>
+            </span>
           </div>
         </div>
       </section>
@@ -123,9 +128,10 @@ export default function Home() {
             From WhatsApp post to confirmed order.
           </h2>
           <div className="steps">
-            {steps.map(([number, title, text]) => (
-              <article className="step" key={number}>
-                <span>{number}</span>
+            {steps.map(([Icon, title, text], index) => (
+              <article className="step" key={title}>
+                <span>0{index + 1}</span>
+                <Icon />
                 <h3>{title}</h3>
                 <p>{text}</p>
               </article>
@@ -135,16 +141,18 @@ export default function Home() {
       </section>
       <section className="seller-value shell">
         <div>
-          <span className="eyebrow">
-            <PackageCheck size={16} /> Quietly organised behind the scenes
-          </span>
-          <h2 className="section-title">More selling. Less chat-searching.</h2>
+          <span className="eyebrow">Start with what you have</span>
+          <h2 className="section-title">One product or several, you decide.</h2>
         </div>
-        <p>
-          Buyers choose the right size or colour, payment connects to the
-          correct order, stock is reserved, and each customer gets a tracking
-          link—without replacing how you already sell.
-        </p>
+        <div>
+          <p>
+            Create a focused link for one product, or share your multi-product
+            sales link when buyers need choices.
+          </p>
+          <Link className="button" href="/register">
+            Start free <ArrowRight size={18} />
+          </Link>
+        </div>
       </section>
     </main>
   );

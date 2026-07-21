@@ -1,17 +1,34 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  BadgeCheck,
   Check,
-  MessageCircle,
+  PackagePlus,
   Share2,
-  ShieldCheck,
   ShoppingBag,
-  Sparkles,
 } from "lucide-react";
 import { publicConfig } from "@/lib/config";
 import styles from "./how-it-works.module.css";
 export const metadata = { title: "How it works" };
+const steps = [
+  {
+    Icon: PackagePlus,
+    kicker: "Step 1",
+    title: "Add your products",
+    text: "Enter the product, options, stock and how much you need to receive.",
+  },
+  {
+    Icon: Share2,
+    kicker: "Step 2",
+    title: "Share your sales link",
+    text: "Use it on WhatsApp Status, groups or private chats.",
+  },
+  {
+    Icon: ShoppingBag,
+    kicker: "Step 3",
+    title: "Fulfil paid orders",
+    text: "SKWER records the buyer, payment, selected item and what happens next.",
+  },
+];
 export default function Page() {
   return (
     <main className={`public-page ${styles.page}`}>
@@ -27,171 +44,63 @@ export default function Page() {
         </Link>
       </nav>
       <header className={styles.hero}>
-        <span className="eyebrow">
-          <Sparkles size={16} /> From WhatsApp post to organised order
-        </span>
-        <h1>
-          Your customer should understand what to do without messaging for
-          instructions.
-        </h1>
+        <span className="eyebrow">How SKWER works</span>
+        <h1>Create a smart sales link in three steps.</h1>
         <p>
-          SKWER keeps WhatsApp as your audience, then gives each ready buyer a
-          focused path from product choice to verified payment and fulfilment.
+          Add what you sell, share the link on WhatsApp, then manage verified
+          orders in one place.
         </p>
         <div className="hero-actions">
           <Link className="button" href="/register">
-            Create my first link <ArrowRight size={18} />
-          </Link>
-          <Link className="button button-secondary" href="/p/GLAM-PH-01">
-            Try the buyer demo
+            Create my first sales link <ArrowRight size={18} />
           </Link>
         </div>
       </header>
-      <section
-        className={styles.flow}
-        aria-label="Seller and buyer product flow"
-      >
-        <article className={styles.stage}>
-          <div className={styles.copy}>
-            <span>For the seller · 2–5 minutes</span>
-            <h2>Build the sales link</h2>
-            <p>
-              The form asks one decision at a time and shows the buyer price
-              before publishing.
-            </p>
-          </div>
-          <div className={styles.browser}>
-            <div className={styles.browserTop}>
-              <i />
-              <i />
-              <i />
-              <small>New sales link</small>
+      <section className={styles.flow} aria-label="Three setup steps">
+        {steps.map(({ Icon, kicker, title, text }, index) => (
+          <div key={title} className={styles.stage}>
+            <div className={styles.copy}>
+              <span>{kicker}</span>
+              <h2>{title}</h2>
+              <p>{text}</p>
             </div>
-            <div className={styles.builder}>
-              <b>What are you selling?</b>
-              <label>
-                Product title<span>Soft Glam Set</span>
-              </label>
-              <div className={styles.two}>
-                <label>
-                  Stock<span>6 available</span>
-                </label>
-                <label>
-                  Buyer price<span>₦10,800</span>
-                </label>
-              </div>
-              <button>
-                <Check size={15} /> Publish and share
-              </button>
+            <div className={styles.simpleCard}>
+              <Icon />
+              <strong>{title}</strong>
+              {index === 0 && (
+                <>
+                  <span>Product name</span>
+                  <span>Price and stock</span>
+                </>
+              )}
+              {index === 1 && (
+                <>
+                  <span>Your sales link</span>
+                  <button>Copy and share</button>
+                </>
+              )}
+              {index === 2 && (
+                <>
+                  <span>
+                    <Check size={14} /> Payment verified
+                  </span>
+                  <span>
+                    <Check size={14} /> Order ready to fulfil
+                  </span>
+                </>
+              )}
             </div>
           </div>
-        </article>
-        <ArrowRight className={styles.connector} />
-        <article className={styles.stage}>
-          <div className={styles.copy}>
-            <span>For the buyer · no account</span>
-            <h2>Choose with confidence</h2>
-            <p>
-              Price, real options, seller identity, reward rules and fulfilment
-              expectations appear before checkout.
-            </p>
-          </div>
-          <div className={styles.phone}>
-            <div className={styles.phoneBar}>
-              Amara Beauty <BadgeCheck size={14} />
-            </div>
-            <div className={styles.productArt}>Soft Glam Set</div>
-            <div className={styles.phoneBody}>
-              <b>₦10,800</b>
-              <small>Shade</small>
-              <div>
-                <i>Warm</i>
-                <i>Neutral</i>
-              </div>
-              <p>
-                <ShieldCheck size={14} /> Secure Paystack checkout
-              </p>
-              <button>Buy now</button>
-            </div>
-          </div>
-        </article>
-        <ArrowRight className={styles.connector} />
-        <article className={styles.stage}>
-          <div className={styles.copy}>
-            <span>After payment</span>
-            <h2>Know what happens next</h2>
-            <p>
-              The private order link shows paid amount, outstanding balance,
-              fulfilment and seller updates.
-            </p>
-          </div>
-          <div className={styles.orderCard}>
-            <span className="badge">Payment confirmed</span>
-            <h3>Order SKW-A81K</h3>
-            <div>
-              <small>Amount paid</small>
-              <b>₦10,800</b>
-            </div>
-            <ul>
-              <li>
-                <Check /> Payment verified
-              </li>
-              <li>
-                <ShoppingBag /> Seller confirming order
-              </li>
-              <li>
-                <MessageCircle /> Pickup update follows
-              </li>
-            </ul>
-          </div>
-        </article>
-      </section>
-      <section className={styles.rewardFlow}>
-        <div>
-          <span className="eyebrow">Growth without gimmicks</span>
-          <h2>A reward follows a real completed sale—not a click.</h2>
-          <p>
-            Buyer A shares after paying. Buyer B must be a distinct customer,
-            pay in full and complete fulfilment. Only then can Buyer A receive
-            single-use credit with the same seller.
-          </p>
-        </div>
-        <div className={styles.loop}>
-          <span>
-            <ShoppingBag /> Buyer A purchases
-          </span>
-          <ArrowRight />
-          <span>
-            <Share2 /> Shares personal link
-          </span>
-          <ArrowRight />
-          <span>
-            <BadgeCheck /> Buyer B qualifies
-          </span>
-          <ArrowRight />
-          <span>
-            <Sparkles /> Credit unlocks
-          </span>
-        </div>
+        ))}
       </section>
       <section className={styles.assurance}>
-        <h2>What SKWER handles for you</h2>
-        <div>
-          <span>
-            <ShieldCheck /> Server-verified payments
-          </span>
-          <span>
-            <ShoppingBag /> Stock and order history
-          </span>
-          <span>
-            <MessageCircle /> Copy-ready follow-ups
-          </span>
-          <span>
-            <Share2 /> Referral attribution
-          </span>
-        </div>
+        <h2>Buyers get a simple path</h2>
+        <p>
+          They open the link → choose what they want and pay → After a completed
+          referral sale → the original buyer can earn seller-specific credit.
+        </p>
         <Link className="button" href="/register">
-          Start with one product <ArrowRight size={18} />
+          Create my first sales link <ArrowRight size={18} />
         </Link>
       </section>
     </main>

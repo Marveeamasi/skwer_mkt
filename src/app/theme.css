@@ -12,6 +12,8 @@
   --info: #ddf4ff;
   --reward: #efffd4;
   --shadow: #11182714;
+  --hero-highlight: #b9f34a;
+  --primary-hover: #a8e13a;
 }
 html[data-theme="dark"] {
   color-scheme: dark;
@@ -27,6 +29,8 @@ html[data-theme="dark"] {
   --info: #142b38;
   --reward: #1d331c;
   --shadow: #0008;
+  --hero-highlight: #6f922f;
+  --primary-hover: #c7f66b;
 }
 body,
 .public-page,
@@ -93,6 +97,18 @@ body,
   background: var(--surface) !important;
   color: var(--text) !important;
   border-color: var(--text) !important;
+}
+.button:not(.button-secondary),
+.builder button,
+.phone button {
+  color: #111827 !important;
+}
+.button:not(.button-secondary):hover,
+.button:not(.button-secondary):focus-visible {
+  background: var(--primary-hover) !important;
+  color: #111827 !important;
+  border-color: #111827 !important;
+  box-shadow: 5px 5px 0 #111827 !important;
 }
 .brand-mark {
   font-size: 0 !important;

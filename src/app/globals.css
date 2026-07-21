@@ -72,6 +72,7 @@ button {
   border: 2px solid;
   border-radius: 14px;
   background: var(--lime);
+  color: var(--ink);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -82,7 +83,7 @@ button {
 }
 .button:hover {
   transform: translate(-1px, -1px);
-  box-shadow: 5px 5px 0;
+  box-shadow: 5px 5px 0 var(--ink);
 }
 .button:focus-visible,
 a:focus-visible {
@@ -120,7 +121,7 @@ a:focus-visible {
   margin: 18px 0 22px;
 }
 .hero h1 span {
-  background: linear-gradient(transparent 66%, var(--lime) 0);
+  background: linear-gradient(transparent 66%, var(--hero-highlight) 0);
 }
 .lede {
   font-size: 19px;
@@ -257,6 +258,95 @@ a:focus-visible {
 .step > span {
   color: var(--lime);
   font-weight: 800;
+}
+.step > svg {
+  width: 22px;
+  margin-top: 28px;
+  color: var(--lime);
+}
+.step > svg + h3 {
+  margin-top: 12px;
+}
+.seller-preview {
+  border: 2px solid var(--text);
+  border-radius: 24px;
+  background: var(--surface);
+  box-shadow: 10px 10px 0 var(--text);
+  padding: 20px;
+  rotate: 5deg;
+}
+.seller-preview-head,
+.preview-products article,
+.preview-result {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.seller-preview-head > div,
+.preview-products article > div,
+.preview-result span {
+  display: grid;
+  gap: 3px;
+}
+.seller-preview-head > .badge {
+  margin-left: auto;
+}
+.seller-preview small,
+.preview-products small,
+.preview-result small {
+  color: var(--text-soft);
+  font-size: 11px;
+}
+.preview-link {
+  margin: 18px 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--surface-soft);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.preview-products {
+  display: grid;
+  gap: 9px;
+}
+.preview-products article {
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.preview-art {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  flex: none;
+}
+.preview-art.coral {
+  background: linear-gradient(135deg, #ff9c88, #f6c25c);
+}
+.preview-art.lime {
+  background: linear-gradient(135deg, var(--lime), #52c7a3);
+}
+.preview-result {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--reward);
+}
+.preview-result > svg {
+  color: var(--success);
+  flex: none;
+}
+.seller-value > div:last-child {
+  display: grid;
+  gap: 18px;
+  justify-items: start;
+}
+.seller-value > div:last-child p {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 18px;
+  line-height: 1.7;
 }
 .step h3 {
   font-size: 20px;
