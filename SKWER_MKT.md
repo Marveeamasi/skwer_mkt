@@ -3338,3 +3338,6 @@ module.exports = async function handler(req, res) {
   }
 };
 ```
+
+*A seller is not limited to just a product to sales link (campaign), they can add more different product, making stress free for them to create and share so many links to customers, so a link could have 3 different product where the customer can choose the one they want and pay, same process, but note that each product has their own reward, own price, media, name and so on, if a custumer pays for 2 product in a link of 4, when he shares the link and a new customer pays something from that link, he gets the reward for the two product he payed, so its still same thing as before, and ensure the process of add product or products for a campaign is simple and easy for vendors i mean very easy and fast for them, else they will get tired*
+

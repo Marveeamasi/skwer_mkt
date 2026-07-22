@@ -31,7 +31,7 @@ const steps = [
 export default function Home() {
   return (
     <main>
-      <nav className="shell nav" aria-label="Main navigation">
+      <nav className="shell nav" style={{position: "sticky", top: 0}} aria-label="Main navigation">
         <Link
           className="brand"
           href="/"
@@ -47,20 +47,15 @@ export default function Home() {
             How it works
           </Link>
           <Link className="button button-small button-secondary" href="/login">
-            Seller login
+            Login
           </Link>
         </div>
       </nav>
       <section className="hero shell vendor-hero">
         <div className="hero-copy">
-          <span className="eyebrow">Built for WhatsApp sellers</span>
           <h1>
             Your WhatsApp customers can bring your <span>next customers.</span>
           </h1>
-          <p className="lede">
-            Create a smart product link, receive secure payments, record every
-            order and reward buyers who create real sales.
-          </p>
           <div className="hero-actions">
             <Link className="button" href="/register">
               Create my first sales link <ArrowRight size={19} />
@@ -69,89 +64,35 @@ export default function Home() {
               See how it works
             </Link>
           </div>
-          <div className="trust-row">
-            <span>
-              <BadgeCheck /> No monthly fee
-            </span>
-            <span>
-              <ShieldCheck /> Paystack checkout
-            </span>
-            <span>
-              <Check /> Buyers need no account
-            </span>
-          </div>
         </div>
         <div
           className="seller-preview"
           aria-label="Example of what a seller receives"
         >
-          <div className="seller-preview-head">
-            <span className="seller-avatar">AM</span>
-            <div>
-              <small>Your sales link</small>
-              <strong>Amara Beauty</strong>
-            </div>
-            <span className="badge">Ready to share</span>
-          </div>
-          <div className="preview-link">
-            skwer-mkt.vercel.app/s/amara-beauty
-          </div>
-          <div className="preview-products">
-            <article>
-              <i className="preview-art coral" />
-              <div>
-                <strong>Soft Glam Set</strong>
-                <small>3 options · In stock</small>
-              </div>
-            </article>
-            <article>
-              <i className="preview-art lime" />
-              <div>
-                <strong>Lip Care Bundle</strong>
-                <small>2 options · In stock</small>
-              </div>
-            </article>
+          <div className="trust-row">
+              <span>
+              <Check /> Create a sales link
+            </span>
+             <span>
+              <Check /> Share link to customers on your chats, status and groups
+            </span>
+            <span>
+              <Check /> Receive secure payments from customers
+            </span>
+            <span>
+              <Check /> Automatic order recording and notifications
+            </span>
+            <span>
+              <Check /> Your customers who bring you new customers gets rewarded
+            </span>
           </div>
           <div className="preview-result">
             <Check size={18} />
             <span>
-              <strong>Add one product or a few.</strong>
-              <small>Share the link when you are ready.</small>
+              <strong>Your #1 sales tool</strong>
+              <small>Built for sellers and your customers</small>
             </span>
           </div>
-        </div>
-      </section>
-      <section className="how">
-        <div className="shell">
-          <span className="eyebrow">Simple from the first sale</span>
-          <h2 className="section-title">
-            From WhatsApp post to confirmed order.
-          </h2>
-          <div className="steps">
-            {steps.map(([Icon, title, text], index) => (
-              <article className="step" key={title}>
-                <span>0{index + 1}</span>
-                <Icon />
-                <h3>{title}</h3>
-                <p>{text}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-      <section className="seller-value shell">
-        <div>
-          <span className="eyebrow">Start with what you have</span>
-          <h2 className="section-title">One product or several, you decide.</h2>
-        </div>
-        <div>
-          <p>
-            Create a focused link for one product, or share your multi-product
-            sales link when buyers need choices.
-          </p>
-          <Link className="button" href="/register">
-            Start free <ArrowRight size={18} />
-          </Link>
         </div>
       </section>
     </main>

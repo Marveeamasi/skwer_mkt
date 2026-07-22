@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  ArrowLeft,
   ArrowRight,
   Check,
   PackagePlus,
@@ -14,7 +15,7 @@ const steps = [
     Icon: PackagePlus,
     kicker: "Step 1",
     title: "Add your products",
-    text: "Enter the product, options, stock and how much you need to receive.",
+    text: "Enter the product, options, stock customer's reward and how much you need to receive.",
   },
   {
     Icon: Share2,
@@ -32,7 +33,7 @@ const steps = [
 export default function Page() {
   return (
     <main className={`public-page ${styles.page}`}>
-      <nav className="public-nav shell">
+      <nav className="public-nav shell" aria-label="Main navigation">
         <Link className="brand" href="/">
           <span className="brand-mark" aria-hidden>
             ↗
@@ -44,17 +45,13 @@ export default function Page() {
         </Link>
       </nav>
       <header className={styles.hero}>
-        <span className="eyebrow">How SKWER works</span>
-        <h1>Create a smart sales link in three steps.</h1>
-        <p>
-          Add what you sell, share the link on WhatsApp, then manage verified
-          orders in one place.
-        </p>
-        <div className="hero-actions">
-          <Link className="button" href="/register">
-            Create my first sales link <ArrowRight size={18} />
+        <span className="eyebrow">
+          <Link href="/" className="text-link">
+            <ArrowLeft size={18} />
           </Link>
-        </div>
+          How SKWER works
+        </span>
+        <h1>Create a smart sales link in three steps.</h1>
       </header>
       <section className={styles.flow} aria-label="Three setup steps">
         {steps.map(({ Icon, kicker, title, text }, index) => (
@@ -95,13 +92,13 @@ export default function Page() {
       </section>
       <section className={styles.assurance}>
         <h2>Buyers get a simple path</h2>
-        <p>
-          They open the link → choose what they want and pay → After a completed
-          referral sale → the original buyer can earn seller-specific credit.
-        </p>
-        <Link className="button" href="/register">
-          Create my first sales link <ArrowRight size={18} />
-        </Link>
+        <p>They open the link</p>
+        <div>↓</div>
+        <p>They choose what they want and pay</p>
+        <div>↓</div>
+        <p>After a completed referral sale</p>
+        <div>↓</div>
+        <p>The original buyer can earn seller-specific credit.</p>
       </section>
     </main>
   );
